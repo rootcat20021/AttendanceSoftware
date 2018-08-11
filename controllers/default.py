@@ -3499,6 +3499,8 @@ def schedule_report_mail():
 
 
 
+
+@auth.requires(auth.user_id == 3)
 def update_master_from_google_sheets():
     import os
     pathlog = os.path.join(request.folder,'private','log_update_master_from_google_sheet')
