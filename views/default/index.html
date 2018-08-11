@@ -1,0 +1,11 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+
+{{if 'message' in globals():}}
+<h3>{{=message}}</h3>
+
+<h4>{{=T('Please click on the link in the above menu')}}</h4>
+<h4>
+    {{=T('This portal Supports viewing details of Sewadar, Creating the monthly Attendance Register and Updating Details of Sewadars')}}
+</h4>
+{{pass}}

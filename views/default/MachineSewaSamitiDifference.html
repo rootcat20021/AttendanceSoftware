@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table
+{
+   border-collapse : collapse;
+}
+table, th, td
+{
+    border:1px solid green;
+    text-align:center;
+}
+th
+{
+    background-color:yellow;
+    color:black;
+}
+td
+{
+    background-color:white;
+    color:black;
+}
+
+</style>
+</head>
+</html>
+{{extend 'layout.html'}}
+{{=form}}
+<h1>Sewa Samiti Attendance</h1>
+{{=SSAttendance}}
+<h1>Machine Attendance</h1>
+{{=MachineAttendance}}
+<h1>Machine Difference</h1>
+{{=MachineDifference}}

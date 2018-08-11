@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, th, td
+{
+border:1px solid black;
+}
+th
+{
+background-color:green
+color:white;
+}
+
+</style>
+</head>
+</html>
+{{extend 'layout.html'}}
+{{=updation_message}}
+{{=form}}
+<hr>
+<h2>
+    {{=TextMessage}}
+</h2>
+<hr>
+<h2>
+    SEWADAR DETAILS:
+{{=SewaSamitiCountRecords}}
+{{=MasterRecords}}<br />
+</h2>
+<hr>
+<h2>
+    <font color="brown">TENTATIVE PARSHAD STATUS (subject to full attendance in current visit) : </font> {{=ParshadStatus}}
+</h2>
+<h2>
+    <font color="brown">REMARKS :</font><br />
+    {{=BEAUTIFY(ParshadRemarks)}} <br />
+</h2>
+<hr>
+<h4>
+   WW SCHEDULE:
+{{=WWSchedule}}
+</h4>
+<hr>
+<h2>
+   SEWASAMITI DATES:
+{{=SewaSamitiDatesRecords}}
+</h2>
+<hr>

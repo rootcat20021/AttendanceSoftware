@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table
+{
+   border-collapse : collapse;
+}
+table, th, td
+{
+    border:1px solid green;
+    text-align:center;
+}
+th
+{
+    background-color:yellow;
+    color:black;
+}
+td
+{
+    background-color:white;
+    color:black;
+}
+
+</style>
+</head>
+</html>
+{{extend 'layout.html'}}
+
+<h1>Jatha Attendance</h1>
+{{=form}}
+<h2>
+{{=TextMessage}}    
+</h2>
+<h2>
+Note: The records were updated on 
+<font sizes="3" color="red">{{=ReportDate}}</font>
+</h2>
+{{=DAttendanceRegisterTable}}

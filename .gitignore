@@ -1,0 +1,9 @@
+sessions/
+errors/
+private/
+**/*.bak
+**/*.log
+**/*.db
+**/*.db-journal
+**/*.table
+**/*.log_*

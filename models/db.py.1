@@ -1,0 +1,108 @@
+db=DAL('mssql://DSN=starsql;UID=b19743;PWD=1Eros4Angeleyez')
+
+
+db.define_table('SSAttendanceDate',
+                Field('OldSewadarID','string'),
+                Field('SewadarNewID','string'),
+                Field('Name','string'),
+                Field('Gender','string'),
+                Field('DepartmentID','string'),
+                Field('DutyDate','datetime'),
+                Field('Duty_Type','string'),
+                format='%(SewadarNewID)s')
+
+db.SSAttendanceDate.SewadarNewID.requires = IS_NOT_EMPTY()
+db.SSAttendanceDate.DutyDate.requires = IS_NOT_EMPTY()
+db.SSAttendanceDate.Duty_Type.requires = IS_NOT_EMPTY()
+db.SSAttendanceDate.Name.requires = IS_NOT_EMPTY()
+db.SSAttendanceDate.DepartmentID.requires = IS_NOT_EMPTY()
+
+
+
+
+
+db.define_table('SSAttendanceCount',
+                Field('NewID','string'),
+                Field('OldSewadarid','string'),
+                Field('Name','string'),
+                Field('Father_Husband_Name','string'),
+                Field('status','string'),
+                Field('gender','string'),
+                Field('B','integer'),
+                Field('w','integer'),
+                Field('V1','integer'),
+                Field('V2','integer'),                
+                Field('V3','integer'),                
+                Field('V4','integer'),                
+                Field('Total','integer'),                
+                Field('areaname','string'),                
+                Field('reportdt','datetime'),                                
+                format='%(SewadarNewID)s')
+
+#Add checks here
+
+
+
+
+
+
+
+
+
+db.define_table('MasterSheet',
+                Field('GR_NO','string'),
+                Field('SewadarNewID','string'),
+                Field('FH_NAME','string'),
+                Field('RES_ADDR1','string'),
+                Field('RES_ADDR2','string'),
+                Field('INITIATED_SS','string'),
+                Field('RES_PHONE1','string'),
+                Field('RES_PHONE2','string'),
+                Field('RES_PHONE3','string'),
+                Field('DUTY_AT','string'),
+                Field('CANTEEN','string'),
+                Field('DEV_DTY','string'),
+                format='%(GR_NO)s')
+
+db.MasterSheet.GR_NO.requires = IS_NOT_EMPTY()
+db.MasterSheet.CANTEEN.requires = IS_NOT_EMPTY()
+db.MasterSheet.DEV_DTY.requires = IS_NOT_EMPTY()
+
+
+db.define_table('RawData',
+                Field('CARDNO','string'),
+                Field('OFFICEPUNCH','datetime'),
+                Field('P_DAY','string'),
+                Field('ReasonCode','string'),
+                Field('ERROR_CODE','string'),
+                Field('Id_No','string'),
+                Field('PROCESS','string'),
+                Field('DOOR_TIME','string'),
+                Field('Inout','string'),
+                Field('sss','string'),
+                Field('lcode','string'),
+                Field('Created_Date','datetime'),
+                Field('FName','string'),
+                primarykey=['CARDNO','OFFICEPUNCH'],
+                migrate=False)
+db.RawData.GRNO = Field.Virtual('GRNO',lambda row:row.RawData.CARDNO)
+
+db.define_table('ManualPunch',
+                Field('GRNO','string'),
+                Field('Date','datetime'))
+
+db.define_table('ManualCard',
+                 Field('GRNO','string'),
+                 Field('Date','datetime'))
+
+db.define_table('AttendanceRegisterTable',
+                Field('GR_NO','string'),
+                Field('SewadarNewID','string'),
+                Field('NAME','string'),
+                Field('STATUS','string'),
+                Field('REQD','string'),
+                
+                Field('TOTAL','integer'),
+                migrate=True,
+                redefine=True,
+                format='%(SewadarNewID)s')

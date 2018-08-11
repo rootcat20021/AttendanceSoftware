@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, td, th
+{
+border:1px solid green;
+}
+th
+{
+background-color:green;
+color:white;
+}
+</style>
+</head>
+</html>
+{{extend 'layout.html'}}
+<h3>Deployment Master</h3>
+<a href="/AttendanceSoftware/static/Master_xls.xlsx?attachment">Download Sample</a>
+<a href="/AttendanceSoftware/default/update_master_from_google_sheets">Update From Google Sheet</a>
+{{=form2}}
+<h3>SewaSamit Attendance dates</h3>
+<a href="/AttendanceSoftware/static/SSAttendanceDates_xls.xlsx?attachment">Download Sample</a>
+{{=form3}}
+<h3>SewaSamit Attendance count</h3>
+<a href="/AttendanceSoftware/static/SSAttendanceCount_xls.xlsx?attachment">Download Sample</a>
+{{=form4}}
+<h3>STARLINK: Machine Attendance</h3>
+{{=form6}}
+<h3>Machine Manual Attendance</h3>
+<a href="/AttendanceSoftware/static/MachineAttendance.xlsx?attachment">Download Sample</a>
+{{=form7}}
+<h3>Initiation List</h3>
+<a href="/AttendanceSoftware/static/InitiatedList.xlsx?attachment">Download Sample</a>
+{{=form8}}
+<h3>Sewa Samiti Tenative Parshad List</h3>
+<a href="/AttendanceSoftware/static/SSParshadStatus.xlsx?attachment">Download Sample</a>
+{{=form9}}
+<h3>Parshad List Exception Mails</h3>
+<a href="/AttendanceSoftware/static/MailException_xls.xlsx?attachment">Download Sample</a>
+{{=form12}}
+<h3>Previous Visit Parshad List</h3>
+{{=form10}}
+<h3>CardList</h3>
+<a href="/AttendanceSoftware/static/CardList_xls.xlsx?attachment">Download Sample</a>
+{{=form5}}
+<h3>All CardList</h3>
+<a href="/AttendanceSoftware/static/AllCardList_xls.xlsx?attachment">Download Sample</a>
+{{=form11}}
+<h3>WW Duty Allocation</h3>
+<a href="/AttendanceSoftware/static/WWDuty.xlsx?attachment">Download Sample</a>
+{{=form13}}
