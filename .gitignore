@@ -2,6 +2,7 @@ sessions/
 errors/
 private/
 **/*.bak
+**/*_bk
 **/*.log
 **/*.db
 **/*.db-journal
