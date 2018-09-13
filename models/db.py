@@ -43,6 +43,7 @@ db.define_table('SSAttendanceCount',
                 Field('V2','integer'),
                 Field('V3','integer'),
                 Field('V4','integer'),
+                Field('Initiated_Status','string'),
                 Field('TotalVisit','integer'),
                 Field('Total','integer'),
                 Field('areaname','string'),
@@ -64,6 +65,7 @@ db.define_table('MasterSheet',
                 Field('SewadarNewID','string'),
                 Field('CANTEEN','string'),
                 Field('DEV_DTY','string'),
+                Field('MOBILE','string'),
                 migrate=True,
                 redefine=True,
                 format='%(SewadarNewID)s')
@@ -115,23 +117,17 @@ db.define_table('PreviousParshadList',
 
 #Clear every visit
 db.define_table('ParshadMailException',
-                Field('NewGRNO','string'),
+                Field('SewadarNewID','string'),
                 Field('ExceptionField','string'),
                 Field('Status','string'),
                 redefine=True,
                 migrate=True)
 
-db.ParshadMailException.ExceptionField.requires = IS_IN_SET(['ALL','SS Count','WW Count','Current Visit','Visits Count','Initiation'])
-
-db.define_table('InitiatedList',
-                Field('NewGRNO','string'),
-                Field('Status','string'),
-                redefine=True,
-                migrate=True)
+db.ParshadMailException.ExceptionField.requires = IS_IN_SET(['ALL','SS Count','WW Count','Current Visit','Visits Count','Initiation','Mandatory Days'])
 
 db.define_table('SSTentativeParshadList',
-                Field('NewGRNO','string'),
-                Field('Status','string'),
+                Field('SewadarNewID','string'),
+                Field('SSTentativeStatus','string'),
                 redefine=True,
                 migrate=True)
 

@@ -18,7 +18,7 @@ def Roundoffdate(DATETIME, CUTOFF):
     if (DATETIME.hour < int(CUTOFF)) or (DATETIME.hour == int(CUTOFF) and DATETIME.minute == 0):
        RoundedDate = RoundedDate.replace(hour=0, minute=0, second=0, microsecond=0)
     else:
-       RoundedDate = (RoundedDate + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0) 
+       RoundedDate = (RoundedDate + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     return RoundedDate
 
 def MachineCARDNOtoGRNO(CARDNO):
@@ -144,7 +144,7 @@ def view_sewadar():
 
         db.SSAttendanceDate.DutyDate.represent = lambda value, row: value.strftime("%d/%m/%Y")
 
-        
+
         datasource = db((db.SSAttendanceDate.SewadarNewID.like(SewadarNewID)) & (db.SSAttendanceDate.DutyDate > DATE_PRINT )).select(orderby=~db.SSAttendanceDate.DutyDate)
         print "SSDate read"
 
@@ -266,7 +266,7 @@ def update():
         #Then redirect to the next screen (or do the processing now)
         redirect(URL(r=request, f='uploaddata_MachineAttendance'))
 
-    
+
     form7=form_factory(SQLField('MACHINE_xlsx','upload',uploadfolder='temporary'),formname='MachineManual')
     if form7.accepts(request.vars,session,formname='MachineManual'):
         request.flash='Received: %s'%request.vars.MACHINE_xlsx
@@ -710,8 +710,8 @@ def AddAttendanceFileToMachineAttendanceDatabase(walk_dir,**GROldToNew):
                         except:
                             print "malformed or future date " + row_dict['DATETIME'] + " check"
 
-                                    
-                                
+
+
                     except:
                         pass
 
@@ -954,7 +954,7 @@ def uploaddata_SSAttendanceCount():
            if myheaders[i].upper() == 'OLDSEWADARID':
                if (value == 'NA') | (value == ''):
                    value = worksheet.cell_value(row, header_cells_in_xls.index('NewID'))
-               
+
 
            if myheaders[i].upper() == 'GENDER':
                if (value.find('f') != -1) |( value.find('F') != -1) | (value.find('la') != -1) | (value.find('La') != -1):
@@ -990,7 +990,7 @@ def ParshadList():
     from openpyxl.cell import get_column_letter
     response.headers['Connection'] =  'keep-alive'
 
-    
+
     from gluon.sqlhtml import form_factory
     import datetime
     import time
@@ -1002,16 +1002,14 @@ def ParshadList():
     message = 'Schedular based'
 
     #form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.today()-datetime.timedelta(days=31)),SQLField('DateEnd','date',default=datetime.datetime.today()),SQLField('LALastLadiesNewGRNO','integer',default=9999),SQLField('LBLastLadiesNewGRNO','integer',default=9999),SQLField('GALastGentsNewGRNO','integer',default=9999),SQLField('GBLastGentsNewGRNO','integer',default=9999),SQLField('LastOSS','integer',default=40000),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=4),SQLField('WWCutOff','integer',default=2),SQLField('DumpMachineAttendance','string',requires=IS_IN_SET(['YES','NO']),default='NO'),SQLField('DumpSSAttendance','string',requires=IS_IN_SET(['YES','NO']),default='NO'),SQLField('CANTEENWISE_REPORT','string',requires=IS_IN_SET(['YES','NO','FLAT']),default='NO'),formname='DateSelect')
-    form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.strptime('16-November-2016 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('DateEnd','date',default=datetime.datetime.strptime('15-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('LALastLadiesNewGRNO','integer',default=9999),SQLField('LBLastLadiesNewGRNO','integer',default=9999),SQLField('GALastGentsNewGRNO','integer',default=9999),SQLField('GBLastGentsNewGRNO','integer',default=9999),SQLField('LastOSS','integer',default=40000),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=4),SQLField('WWCutOff','integer',default=2),SQLField('WWWaiver','integer',default=60),SQLField('WWAgeWaiver','integer',default=60),SQLField('DumpMachineAttendance','string',requires=IS_IN_SET(['YES','NO']),default='NO'),SQLField('DumpSSAttendance','string',requires=IS_IN_SET(['YES','NO']),default='NO'),SQLField('CANTEENWISE_REPORT','string',requires=IS_IN_SET(['YES','NO','FLAT']),default='NO'),SQLField('MailSubject','string',default='Parshad Status'),formname='DateSelect')
+    form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.strptime('13-September-2017 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('DateEnd','date',default=datetime.datetime.strptime('12-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateStart','date',default=datetime.datetime.strptime('05-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateEnd','date',default=datetime.datetime.strptime('09-September-2018 23:59:59','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysCountCutoff','integer',default=3),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=4),SQLField('WWCutOff','integer',default=2),SQLField('WWWaiver','integer',default=60),SQLField('WWAgeWaiver','integer',default=60),SQLField('MailSubject','string',default='Parshad Status'),formname='DateSelect')
 
     if form.accepts(request.vars,session,formname='DateSelect'):
         DateSelectedStart = request.vars.DateStart
         DateSelectedEnd = request.vars.DateEnd
-        LALastLadiesNewGRNO = request.vars.LALastLadiesNewGRNO
-        LBLastLadiesNewGRNO = request.vars.LBLastLadiesNewGRNO
-        GALastGentsNewGRNO = request.vars.GALastGentsNewGRNO
-        GBLastGentsNewGRNO = request.vars.GBLastGentsNewGRNO
-        LastOSS = request.vars.LastOSS
+        MandatoryDaysDateSelectedStart = request.vars.MandatoryDaysDateStart
+        MandatoryDaysDateSelectedEnd = request.vars.MandatoryDaysDateEnd
+        MandatoryDaysCountCutoff = request.vars.MandatoryDaysCountCutoff
         SSCountCutOffGents = request.vars.SSCountCutOffGents
         SSCountCutOffLadies = request.vars.SSCountCutOffLadies
         CVCutOff = request.vars.CVCutOff
@@ -1020,18 +1018,14 @@ def ParshadList():
         WWWaiver = request.vars.WWWaiver
         WWAgeWaiver = request.vars.WWAgeWaiver
         DAY_END_TIME = request.vars.DAY_END_TIME
-        DumpMachineAttendance = request.vars.DumpMachineAttendance
-        DumpSSAttendance = request.vars.DumpSSAttendance
-        CANTEENWISE_REPORT = request.vars.CANTEENWISE_REPORT
         MailSubject = request.vars.MailSubject
-
 
         from datetime import timedelta as timed
         #scheduler.queue_task('DevParshadListScheduled', pvars={'DateSelectedStart':DateSelectedStart, 'DateSelectedEnd':DateSelectedEnd, 'LALastLadiesNewGRNO':LALastLadiesNewGRNO, 'LBLastLadiesNewGRNO':LBLastLadiesNewGRNO, 'GALastGentsNewGRNO':GALastGentsNewGRNO, 'GBLastGentsNewGRNO':GBLastGentsNewGRNO, 'LastOSS':LastOSS, 'SSCountCutOffGents':SSCountCutOffGents, 'SSCountCutOffLadies':SSCountCutOffLadies, 'CVCutOff':CVCutOff, 'VisitCountCutOff':VisitCountCutOff,'WWCutOff':WWCutOff, 'DAY_END_TIME':DAY_END_TIME, 'DumpMachineAttendance':DumpMachineAttendance, 'DumpSSAttendance':DumpSSAttendance, 'CANTEENWISE_REPORT':CANTEENWISE_REPORT},
         #    start_time=request.now + timed(seconds=1),
         #    timeout = 6000)
-        scheduler.queue_task('ParshadListScheduled', pvars={'DateSelectedStart':DateSelectedStart, 'DateSelectedEnd':DateSelectedEnd, 'LALastLadiesNewGRNO':LALastLadiesNewGRNO, 'LBLastLadiesNewGRNO':LBLastLadiesNewGRNO, 'GALastGentsNewGRNO':GALastGentsNewGRNO, 'GBLastGentsNewGRNO':GBLastGentsNewGRNO, 'LastOSS':LastOSS, 'SSCountCutOffGents':SSCountCutOffGents, 'SSCountCutOffLadies':SSCountCutOffLadies, 'CVCutOff':CVCutOff, 'VisitCountCutOff':VisitCountCutOff,'WWCutOff':WWCutOff,'WWWaiver':WWWaiver, 'WWAgeWaiver':WWAgeWaiver, 'DAY_END_TIME':DAY_END_TIME, 'DumpMachineAttendance':DumpMachineAttendance, 'DumpSSAttendance':DumpSSAttendance,'MailSubject':MailSubject},
-            start_time=request.now + timed(seconds=2),
+        scheduler.queue_task('ParshadListScheduled', pvars={'DateSelectedStart':DateSelectedStart, 'DateSelectedEnd':DateSelectedEnd,'MandatoryDaysDateStart':MandatoryDaysDateSelectedStart,'MandatoryDaysDateEnd':MandatoryDaysDateSelectedEnd,'MandatoryDaysCountCutoff':MandatoryDaysCountCutoff,'SSCountCutOffGents':SSCountCutOffGents, 'SSCountCutOffLadies':SSCountCutOffLadies, 'CVCutOff':CVCutOff, 'VisitCountCutOff':VisitCountCutOff,'WWCutOff':WWCutOff,'WWWaiver':WWWaiver, 'WWAgeWaiver':WWAgeWaiver, 'DAY_END_TIME':DAY_END_TIME,'MailSubject':MailSubject},
+            start_time=request.now + timed(seconds=0),
             timeout = 6000)
 
     return dict(form=form,message=message)
@@ -1056,7 +1050,7 @@ def AttendanceRegisterDetailed():
     response.headers['Connection'] =  'keep-alive'
     dworkbook = Workbook()
     dpath = os.path.join(request.folder,'private','AttendanceRegisterDetailed.xlsx')
-    
+
     from gluon.sqlhtml import form_factory
     import datetime
     import time
@@ -1160,7 +1154,7 @@ def AttendanceRegisterDetailed():
                     AttendanceRegister[MEntry.NewGRNO,Roundoffdate(MEntry.DATETIME,DAY_END_TIME)] = [datetime.date.strftime(Roundoffdate(MEntry.DATETIME,DAY_END_TIME),"%d-%b-%Y") + "(MMD)"]
 
 
-        
+
         AttendanceRegister['SEWADARS'] = set(AttendanceRegister['SEWADARS'])
 
         try:
@@ -1190,7 +1184,7 @@ def AttendanceRegisterDetailed():
                     dAttendanceRegister.cell(get_column_letter(i+5)+str(row_num)).value = CombinedDayAttendance
                 except:
                     dAttendanceRegister.cell(get_column_letter(i+5)+str(row_num)).value = ""
-            
+
 
         jatha_count = {}
         for jatha in myjathalist:
@@ -1217,7 +1211,7 @@ def AttendanceRegisterDetailed():
             dAttendanceRegister.row_dimensions[1].height = 60
             dAttendanceRegister.column_dimensions['A'].width = 13.14
 
-            dAttendanceRegister['A2'].value = jatha + ': ATTENDANCE FROM ' + datetime.datetime.strftime(datetime.datetime.strptime(DateSelectedStart,'%Y-%m-%d'),'%d-%b-%Y') + ' TO ' +datetime.datetime.strftime(datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d') - datetime.timedelta(days=1),'%d-%b-%Y') 
+            dAttendanceRegister['A2'].value = jatha + ': ATTENDANCE FROM ' + datetime.datetime.strftime(datetime.datetime.strptime(DateSelectedStart,'%Y-%m-%d'),'%d-%b-%Y') + ' TO ' +datetime.datetime.strftime(datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d') - datetime.timedelta(days=1),'%d-%b-%Y')
             dAttendanceRegister['A2'].font = Font(name='Calibri',size=12,bold=True)
             dAttendanceRegister['A2'].alignment = Alignment(horizontal='center',vertical='center')
 
@@ -1623,7 +1617,7 @@ def ShortAttendance():
                 (SewadarDetails[Sewadar.SewadarNewID,'DATES']).append(Sewadar.DutyDate)
             except:
                 SewadarDetails[Sewadar.SewadarNewID,'DATES'] = [Sewadar.DutyDate]
-                
+
             if ReportDate < Sewadar.DutyDate:
                 ReportDate = Sewadar.DutyDate
 
@@ -2249,7 +2243,7 @@ def MachineSewaSamitiDifference():
                 a = SSAttendanceDictionary[MEntry.NewGRNO,Roundoffdate(MEntry.DATETIME,DAY_END_TIME)]
             except:
                 try:
-                    MachineAttendanceAdditional[MEntry.NewGRNO,MEntry.GRNO,Roundoffdate(MEntry.DATETIME,DAY_END_TIME)].append(MEntry.DATETIME) 
+                    MachineAttendanceAdditional[MEntry.NewGRNO,MEntry.GRNO,Roundoffdate(MEntry.DATETIME,DAY_END_TIME)].append(MEntry.DATETIME)
                 except:
                     MachineAttendanceAdditional[MEntry.NewGRNO,MEntry.GRNO,Roundoffdate(MEntry.DATETIME,DAY_END_TIME)] = [MEntry.DATETIME]
 
@@ -2258,7 +2252,7 @@ def MachineSewaSamitiDifference():
         for key, value in MachineAttendanceAdditional.iteritems():
             MachineAttendanceAdditionalDictionary = {}
             NewGRNO, GRNO, DutyDate = key
-            MachineAttendanceAdditionalDictionary['NewGRNO'] = NewGRNO 
+            MachineAttendanceAdditionalDictionary['NewGRNO'] = NewGRNO
             MachineAttendanceAdditionalDictionary['GRNO'] = GRNO
             MachineAttendanceAdditionalDictionary['DutyDate'] = DutyDate
             MachineAttendanceAdditionalDictionary['DutyDateList'] = value
@@ -2338,7 +2332,7 @@ def CardList():
         OldtoNew[Sewadar.OldSewadarid] = Sewadar.NewID
         NewGRNOs.append(keynew)
         OldGRNOs.append(keyold)
-    
+
     NewGRNOs = sorted(set(NewGRNOs))
     OldGRNOs = sorted(set(OldGRNOs))
 
@@ -2358,7 +2352,7 @@ def CardList():
         db(db.CardList.SewadarNewID == SewadarNewID).delete()
         db.CardList.update_or_insert(**dict(SewadarNewID=SewadarNewID,PROXIMITY_CARDNUMBER=request.vars.A_Card))
         db.AllCardList.update_or_insert(**dict(PROXIMITY_CARDNUMBER=request.vars.A_Card))
-    
+
     #form2=form_factory(SQLField('SewadarOldId','string',default="",requires=IS_IN_SET(OldGRNOs)),Field('A_Card','string',default="",widget=SQLFORM.widgets.autocomplete(request,db.AllCardList.PROXIMITY_CARDNUMBER, limitby=(0,10), min_length=4)),formname='OldCardDetails')
     form2=form_factory(SQLField('SewadarOldId','string',default="",requires=IS_IN_SET(OldGRNOs)),SQLField('A_Card','string',default="",requires=IS_MATCH('^00\d{8}$')),formname='OldCardDetails')
     if form2.accepts(request.vars,session,keepvalues=True,formname='OldCardDetails'):
@@ -2451,7 +2445,7 @@ def download_MachineFiles():
                 f6.write(GRNOtoCARDNO(card.SewadarNewID) + "," + SSCountDict[card.SewadarNewID,'CANTEEN'] + ',' + card.PROXIMITY_CARDNUMBER + '\n')
         except:
             funknown = open(dpathunknown, 'a')
-            funknown.write(GRNOtoCARDNO(card.SewadarNewID)) 
+            funknown.write(GRNOtoCARDNO(card.SewadarNewID))
             funknown.close()
             funknown = open(dpathunknown, 'a')
             funknown.write(SSCountDict[card.SewadarNewID,'NAME'])
@@ -2505,7 +2499,7 @@ def uploaddata_WWScheduleLadies():
     print str(dict_days['Sheet1','ARRAYCOLUMNNAMES'])
     print str(dict_days['Sheet1','ARRAYROWNAMES'])
     return locals()
-    
+
 
 def uploaddata_AllCardList():
     import xlrd
@@ -2635,7 +2629,7 @@ import cv2
 import numpy as np
 import urllib2
 import json
- 
+
 def image_dimensions():
     # Masquerade as Mozilla because some web servers may not like python bots.
     hdr = {'User-Agent': 'Mozilla/5.0'}
@@ -2707,7 +2701,7 @@ def download_TemplateExcel():
         else:
             col = 0
             for cellObj in index_row:
-                IndexSheet[row-1,col] = cellObj.value 
+                IndexSheet[row-1,col] = cellObj.value
                 col = col + 1
         row = row + 1
 
@@ -2749,8 +2743,8 @@ def download_TemplateExcel():
                     except:
                         pass
         i = i + 1
-                
-    
+
+
     dWorkbookr.save(dpathr)
     return response.stream(open(dpathr,'rb'), chunk_size=10**6)
 
@@ -2800,7 +2794,7 @@ def download_SplitExcel():
 
     msg = 'start'
 
-    
+
     IndexSheet = {}
     HeaderIndex = {}
     ListIndex = []
@@ -2848,10 +2842,10 @@ def download_SplitExcel():
             col = 0
             ListIndex.append(my_IndexCol)
             for cellObj in index_row:
-                IndexSheet[my_IndexCol,IndexSheet[my_IndexCol,'MAXROW']-1,col] = cellObj.value 
-                IndexSheet[my_IndexCol,IndexSheet[my_IndexCol,'MAXROW']-1,col,'font'] = cellObj.font.copy() 
-                IndexSheet[my_IndexCol,IndexSheet[my_IndexCol,'MAXROW']-1,col,'alignment'] = cellObj.alignment.copy() 
-                IndexSheet[my_IndexCol,IndexSheet[my_IndexCol,'MAXROW']-1,col,'border'] = cellObj.border.copy() 
+                IndexSheet[my_IndexCol,IndexSheet[my_IndexCol,'MAXROW']-1,col] = cellObj.value
+                IndexSheet[my_IndexCol,IndexSheet[my_IndexCol,'MAXROW']-1,col,'font'] = cellObj.font.copy()
+                IndexSheet[my_IndexCol,IndexSheet[my_IndexCol,'MAXROW']-1,col,'alignment'] = cellObj.alignment.copy()
+                IndexSheet[my_IndexCol,IndexSheet[my_IndexCol,'MAXROW']-1,col,'border'] = cellObj.border.copy()
                 col = col + 1
         row = row + 1
 
@@ -2936,7 +2930,7 @@ def download_SplitExcel():
                             dWorkSheet[get_column_letter(col-PurgedColumnsCount+1)+str(max_header_row+RetainRows+row+1)].border = dIndexFormatSheet[get_column_letter(col+1)+str(RetainRows+1)].border.copy()
         #dWorkSheet.add_print_title(1,RetainRows,rows_or_cols='row')
         dWorkSheet.add_print_title(max_header_row-1,max_header_row+1,rows_or_cols='row')
-    
+
         footer_row_num = 1
         for footer_row in dFooterSheet.rows:
             footer_col_num = 1
@@ -3003,7 +2997,7 @@ def MissedMarking():
         dWorkSheet['E1'] = 'CANTEEN'
         dWorkSheet['F1'] = 'DEV_DTY'
         dWorkSheet['G1'] = 'GENDER'
-        
+
         row_num = 1
         col_index = {'S.NO':'A','GR_NO':'C','NAME':'D','CANTEEN':'E','DEV_DTY':'F','GENDER':'G'}
         for Sewadar in M_SHEET['SEWADARS']:
@@ -3023,14 +3017,14 @@ def MissedMarking():
             except:
                 logf.write("Sewadar = " + Sewadar + " = Absent\n")
                 pass
-                
+
 
         dWorkBook.save(apath)
 
         logf.close()
-       
+
         return response.stream(open(apath,'rb'), chunk_size=10**6)
-        
+
     return dict(form=form)
 
 def DailyStrengthReport():
@@ -3068,7 +3062,7 @@ def DailyStrengthReport():
         ReportDict = {'CANTEENS':[]}
 
         for row in MasterSheet:
-            ReportDict['CANTEENS'].append(row.CANTEEN) 
+            ReportDict['CANTEENS'].append(row.CANTEEN)
             try:
                 ReportDict[row.CANTEEN,'JATHALIST'].append(row.DEV_DTY)
             except:
@@ -3144,7 +3138,7 @@ def DailyStrengthReport():
                     a = ReportDict['ABSENT',canteen,jatha,'M']
                 except:
                     ReportDict['ABSENT',canteen,jatha,'M'] = 0
-        
+
         dSheet = dWorkBook.create_sheet(0)
         dSheet.page_setup.orientation = dSheet.ORIENTATION_LANDSCAPE
         dSheet.page_setup.paperSize = dSheet.PAPERSIZE_A4
@@ -3484,9 +3478,10 @@ def DailyStrengthReport():
     return dict(form=form)
 
 def schedule_report_mail():
+    import datetime
     scheduler.queue_task(AttendanceFetch,
-                        #start_time=datetime.datetime.strptime('11-July-2018 00:27:00','%d-%B-%Y %H:%M:%S'),  # datetime                                    
-                        start_time=datetime.datetime.now() + datetime.timedelta(seconds=3),  # datetime                                    
+                        #start_time=datetime.datetime.strptime('11-July-2018 00:27:00','%d-%B-%Y %H:%M:%S'),  # datetime
+                        start_time=datetime.datetime.now() + datetime.timedelta(seconds=3),  # datetime
                         retry_failed=-1,
                         stop_time=None,  # datetime
                         timeout = 5000,  # seconds
@@ -3496,7 +3491,33 @@ def schedule_report_mail():
                         repeats=1)
     return 0
 
+def schedule_sms_mail():
+    import datetime
+    scheduler.queue_task(SMSReport,
+                        #start_time=datetime.datetime.strptime('11-July-2018 00:27:00','%d-%B-%Y %H:%M:%S'),  # datetime
+                        start_time=datetime.datetime.now() + datetime.timedelta(seconds=3),  # datetime
+                        retry_failed=-1,
+                        stop_time=None,  # datetime
+                        timeout = 5000,  # seconds
+                        prevent_drift=True,
+                        period=86400,  # seconds
+                        immediate=False,
+                        repeats=1)
+    return 0
 
+def schedule_auto_sms():
+    import datetime
+    scheduler.queue_task(SendSMSWarning,
+                        #start_time=datetime.datetime.strptime('11-July-2018 00:27:00','%d-%B-%Y %H:%M:%S'),  # datetime
+                        start_time=datetime.datetime.now() + datetime.timedelta(seconds=3),  # datetime
+                        retry_failed=-1,
+                        stop_time=None,  # datetime
+                        timeout = 5000,  # seconds
+                        prevent_drift=True,
+                        period=86400,  # seconds
+                        immediate=False,
+                        repeats=1)
+    return 0
 
 
 
@@ -3517,7 +3538,7 @@ def update_master_from_google_sheets():
     # The ID and range of a sample spreadsheet.
     #SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
     SAMPLE_SPREADSHEET_ID = '18Hm5KEHTsEDBdFFdpVuoWNexjL7ch89BKV-8edpEKiE'
-    SAMPLE_RANGE_NAME = 'MasterSheet!A:F'
+    SAMPLE_RANGE_NAME = 'MasterSheet!A:G'
 
 
     """Shows basic usage of the Sheets API.
@@ -3540,6 +3561,7 @@ def update_master_from_google_sheets():
             Field('SewadarNewID','string'),
             Field('CANTEEN','string'),
             Field('DEV_DTY','string'),
+            Field('MOBILE','string'),
             migrate=True,
             redefine=True,
             format='%(SewadarNewID)s')
@@ -3557,6 +3579,7 @@ def update_master_from_google_sheets():
             row_dict['SewadarNewID']=row[1]['GR ID']
             row_dict['CANTEEN']=row[1]['Canteen-daily'].upper()
             row_dict['DEV_DTY']=row[1]['New Jatha'].upper()
+            row_dict['MOBILE']=row[1]['MOBILE']
             db.MasterSheet.insert(**row_dict)
 
 

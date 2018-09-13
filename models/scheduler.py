@@ -94,927 +94,289 @@ def uploaddata_SSAttendance():
 
     logf.write("Commited\n")
     logf.close()
-    mail.send('softwareattendance@gmail.com',
+    mail.send('acknowledgesynchronization@gmail.com',
         'Comitted SSAttendance to database',
         'Success',
         attachments = mail.Attachment('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/log_SSAttendance', content_id='text'))
     return 0
 
 
-def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,LALastLadiesNewGRNO,LBLastLadiesNewGRNO,GALastGentsNewGRNO,GBLastGentsNewGRNO,LastOSS,SSCountCutOffGents,SSCountCutOffLadies,CVCutOff,VisitCountCutOff,WWCutOff,WWWaiver,WWAgeWaiver,DAY_END_TIME,DumpMachineAttendance,DumpSSAttendance,MailSubject):
-    db.commit()
+def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStart,MandatoryDaysDateEnd,MandatoryDaysCountCutoff,SSCountCutOffGents,SSCountCutOffLadies,CVCutOff,VisitCountCutOff,WWCutOff,WWWaiver,WWAgeWaiver,DAY_END_TIME,MailSubject):
     import os
+    import pandas as pd
     import pprint
+    CURRENT_VISIT_START = {}
+    CURRENT_VISIT_START[0] = datetime.datetime.strptime('26-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
+    CURRENT_VISIT_START[1] = datetime.datetime.strptime('27-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
+    CURRENT_VISIT_START[2] = datetime.datetime.strptime('28-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
+    CURRENT_VISIT_START[3] = datetime.datetime.strptime('29-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
+    CURRENT_VISIT_START[4] = datetime.datetime.strptime('30-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
+    CURRENT_VISIT_START['COUNT'] = 5
+
     pathlog = os.path.join(request.folder,'private','log_ParshadListScheduled')
     logf = open(pathlog,'w')
-    import os
-    from openpyxl import Workbook
-    from openpyxl.cell import get_column_letter
-    from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
-    response.headers['Connection'] =  'keep-alive'
-    dworkbook = Workbook()
-    dworkbookAttendance = Workbook()
-    dpath = os.path.join(request.folder,'private','TentativeParshadList.xlsx')
-    dpathAttendance = os.path.join(request.folder,'private','DumpAttendance.xlsx')
-
-
-    from gluon.sqlhtml import form_factory
-    import datetime
-    import time
-
-
-    logf.write("Commiting previous db changes\n")
+    logf.write(str(datetime.datetime.now()) + "\n")
     db.commit()
     logf.write("Committed\n")
-    SSCount = db(db.SSAttendanceCount).select()
-    logf.write("ffetched count\n")
-    SSCountDict = {}
-    for Sewadar in SSCount:
-        SSCountDict[Sewadar.NewID,'Gender'] = Sewadar.gender
-        SSCountDict[Sewadar.NewID,'TotalVisit'] = Sewadar.TotalVisit
-        SSCountDict[Sewadar.NewID,'TotalCount'] = Sewadar.Total
-        SSCountDict[Sewadar.NewID,'NAME'] = Sewadar.Name
-        SSCountDict[Sewadar.NewID,'OldSewadarid'] = Sewadar.OldSewadarid
-        SSCountDict[Sewadar.NewID,'status'] = Sewadar.status
-        SSCountDict[Sewadar.NewID,'GENDER'] = Sewadar.gender
-    #Next setup: Change current visit dates(move to old visit dates)
-    #Change total visits
+    df_MasterSheet = pd.DataFrame.from_records(db(db.MasterSheet.id > 0).select().as_list())
+    df_MasterSheet.to_excel(os.path.join(request.folder,'private','df_MasterSheet.xlsx'))
+    df_CountSheet = pd.DataFrame.from_records(db(db.SSAttendanceCount.id > 0).select().as_list())
+    df_CountSheet.drop(columns=['w','B','V1','V2','V3','V4','Father_Husband_Name'],inplace=True)
+    df_CountSheet['SewadarNewID'] = df_CountSheet['NewID'].str.replace('BH0011','')
+    df_CountSheet = df_CountSheet.set_index(['SewadarNewID'])
+    df_CountSheet.drop(columns=['id','areaname','OldSewadarid'],inplace=True)
+    df_CountSheet.drop_duplicates(inplace=True)
+    df_CountSheet.to_excel(os.path.join(request.folder,'private','df_CountSheet.xlsx'))
 
-    pprint.pprint(SSCountDict,open('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/log_SSCoundDict','wb'))
+    df_DateSheet_visit_days = pd.DataFrame.from_records(db((db.SSAttendanceDate.DutyDate >= CURRENT_VISIT_START[0]) & (db.SSAttendanceDate.DutyDate <= CURRENT_VISIT_START[CURRENT_VISIT_START['COUNT']-1])).select().as_list())
+    df_DateSheet_visit_days.reset_index(level=0,inplace=True)
+    df_DateSheet_visit_days.to_excel(os.path.join(request.folder,'private','df_visit_days.xlsx'))
 
-
-
-    SSCURRENT_VISIT_MORNING_START = {}
-    SSCURRENT_VISIT_MORNING_START['D0'] = datetime.datetime.strptime('22-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_START['D1'] = datetime.datetime.strptime('23-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_START['D2'] = datetime.datetime.strptime('24-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_START['D3'] = datetime.datetime.strptime('25-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_START['D4'] = datetime.datetime.strptime('26-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_START['D5'] = datetime.datetime.strptime('27-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-
-    SSCURRENT_VISIT_MORNING_END = {}
-    SSCURRENT_VISIT_MORNING_END['D0'] = datetime.datetime.strptime('22-November-2017 14:30:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_END['D1'] = datetime.datetime.strptime('23-November-2017 14:30:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_END['D2'] = datetime.datetime.strptime('24-November-2017 14:30:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_END['D3'] = datetime.datetime.strptime('25-November-2017 14:30:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_END['D4'] = datetime.datetime.strptime('26-November-2017 14:30:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_MORNING_END['D5'] = datetime.datetime.strptime('27-November-2017 14:30:00','%d-%B-%Y %H:%M:%S')
-
-    SSCURRENT_VISIT_EVENING_START = {}
-    SSCURRENT_VISIT_EVENING_START['D0'] = datetime.datetime.strptime('22-November-2017 14:30:01','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_START['D1'] = datetime.datetime.strptime('23-November-2017 14:30:01','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_START['D2'] = datetime.datetime.strptime('24-November-2017 14:30:01','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_START['D3'] = datetime.datetime.strptime('25-November-2017 14:30:01','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_START['D4'] = datetime.datetime.strptime('26-November-2017 14:30:01','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_START['D5'] = datetime.datetime.strptime('27-November-2017 14:00:01','%d-%B-%Y %H:%M:%S')
-
-    SSCURRENT_VISIT_EVENING_END = {}
-    SSCURRENT_VISIT_EVENING_END['D0'] = datetime.datetime.strptime('22-November-2017 11:59:59','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_END['D1'] = datetime.datetime.strptime('23-November-2017 11:59:59','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_END['D2'] = datetime.datetime.strptime('24-November-2017 11:59:59','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_END['D3'] = datetime.datetime.strptime('25-November-2017 11:59:59','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_END['D4'] = datetime.datetime.strptime('26-November-2017 11:59:59','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT_EVENING_END['D5'] = datetime.datetime.strptime('27-November-2017 11:59:59','%d-%B-%Y %H:%M:%S')
-
-
-    SSCURRENT_VISIT = {}
-    SSCURRENT_VISIT['COUNT'] = 5
-    SSCURRENT_VISIT['D0'] = datetime.datetime.strptime('22-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT['D1'] = datetime.datetime.strptime('22-November-2017 12:00:00','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT['D2'] = datetime.datetime.strptime('23-November-2017 13:00:01','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT['D3'] = datetime.datetime.strptime('24-November-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT['D4'] = datetime.datetime.strptime('25-November-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-    SSCURRENT_VISIT['D5'] = datetime.datetime.strptime('26-November-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-
-
-    VISIT_DATES = {}
-    TOTAL_VISIT = 18
-    VISIT_DATES['V0','COUNT'] = 5
-    VISIT_DATES['V0','D0'] = datetime.datetime.strptime('05-October-2011 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V0','D1'] = datetime.datetime.strptime('05-October-2011 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V0','D2'] = datetime.datetime.strptime('06-October-2011 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V0','D3'] = datetime.datetime.strptime('07-October-2011 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V0','D4'] = datetime.datetime.strptime('08-October-2011 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V0','D5'] = datetime.datetime.strptime('09-October-2011 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V1','COUNT'] = 5
-    VISIT_DATES['V1','D0'] = datetime.datetime.strptime('23-November-2011 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V1','D1'] = datetime.datetime.strptime('23-November-2011 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V1','D2'] = datetime.datetime.strptime('24-November-2011 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V1','D3'] = datetime.datetime.strptime('25-November-2011 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V1','D4'] = datetime.datetime.strptime('26-November-2011 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V1','D5'] = datetime.datetime.strptime('27-November-2011 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V2','COUNT'] = 5
-    VISIT_DATES['V2','D0'] = datetime.datetime.strptime('07-March-2012 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V2','D1'] = datetime.datetime.strptime('07-March-2012 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V2','D2'] = datetime.datetime.strptime('08-March-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V2','D3'] = datetime.datetime.strptime('09-March-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V2','D4'] = datetime.datetime.strptime('10-March-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V2','D5'] = datetime.datetime.strptime('11-March-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V3','COUNT'] = 5
-    VISIT_DATES['V3','D0'] = datetime.datetime.strptime('10-October-2012 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V3','D1'] = datetime.datetime.strptime('10-October-2012 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V3','D2'] = datetime.datetime.strptime('11-October-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V3','D3'] = datetime.datetime.strptime('12-October-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V3','D4'] = datetime.datetime.strptime('13-October-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V3','D5'] = datetime.datetime.strptime('14-October-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V4','COUNT'] = 5
-    VISIT_DATES['V4','D0'] = datetime.datetime.strptime('28-November-2012 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V4','D1'] = datetime.datetime.strptime('28-November-2012 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V4','D2'] = datetime.datetime.strptime('29-November-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V4','D3'] = datetime.datetime.strptime('30-November-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V4','D4'] = datetime.datetime.strptime('01-December-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V4','D5'] = datetime.datetime.strptime('02-December-2012 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V5','COUNT'] = 5
-    VISIT_DATES['V5','D0'] = datetime.datetime.strptime('13-March-2013 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V5','D1'] = datetime.datetime.strptime('13-March-2013 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V5','D2'] = datetime.datetime.strptime('14-March-2013 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V5','D3'] = datetime.datetime.strptime('15-March-2013 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V5','D4'] = datetime.datetime.strptime('16-March-2013 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V5','D5'] = datetime.datetime.strptime('17-March-2013 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V6','COUNT'] = 5
-    VISIT_DATES['V6','D0'] = datetime.datetime.strptime('09-October-2013 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V6','D1'] = datetime.datetime.strptime('09-October-2013 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V6','D2'] = datetime.datetime.strptime('10-October-2013 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V6','D3'] = datetime.datetime.strptime('11-October-2013 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V6','D4'] = datetime.datetime.strptime('12-October-2013 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V6','D5'] = datetime.datetime.strptime('13-October-2013 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V7','COUNT'] = 3
-    VISIT_DATES['V7','D0'] = datetime.datetime.strptime('10-January-2014 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V7','D1'] = datetime.datetime.strptime('10-January-2014 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V7','D2'] = datetime.datetime.strptime('11-January-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V7','D3'] = datetime.datetime.strptime('12-January-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V7','D4'] = datetime.datetime.strptime('13-January-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V8','COUNT'] = 5
-    VISIT_DATES['V8','D0'] = datetime.datetime.strptime('01-October-2014 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V8','D1'] = datetime.datetime.strptime('01-October-2014 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V8','D2'] = datetime.datetime.strptime('02-October-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V8','D3'] = datetime.datetime.strptime('03-October-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V8','D4'] = datetime.datetime.strptime('04-October-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V8','D5'] = datetime.datetime.strptime('05-October-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V9','COUNT'] = 5
-    VISIT_DATES['V9','D0'] = datetime.datetime.strptime('26-November-2014 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V9','D1'] = datetime.datetime.strptime('26-November-2014 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V9','D2'] = datetime.datetime.strptime('27-November-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V9','D3'] = datetime.datetime.strptime('28-November-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V9','D4'] = datetime.datetime.strptime('29-November-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V9','D5'] = datetime.datetime.strptime('30-November-2014 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V10','COUNT'] = 5
-    VISIT_DATES['V10','D0'] = datetime.datetime.strptime('11-March-2015 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V10','D1'] = datetime.datetime.strptime('11-March-2015 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V10','D2'] = datetime.datetime.strptime('12-March-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V10','D3'] = datetime.datetime.strptime('13-March-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V10','D4'] = datetime.datetime.strptime('14-March-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V10','D5'] = datetime.datetime.strptime('15-March-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V11','COUNT'] = 5
-    VISIT_DATES['V11','D0'] = datetime.datetime.strptime('07-October-2015 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V11','D1'] = datetime.datetime.strptime('07-October-2015 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V11','D2'] = datetime.datetime.strptime('08-October-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V11','D3'] = datetime.datetime.strptime('09-October-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V11','D4'] = datetime.datetime.strptime('10-October-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V11','D5'] = datetime.datetime.strptime('11-October-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-
-
-    VISIT_DATES['V12','COUNT'] = 5
-    VISIT_DATES['V12','D0'] = datetime.datetime.strptime('25-November-2015 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V12','D1'] = datetime.datetime.strptime('25-November-2015 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V12','D2'] = datetime.datetime.strptime('26-November-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V12','D3'] = datetime.datetime.strptime('27-November-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V12','D4'] = datetime.datetime.strptime('28-November-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V12','D5'] = datetime.datetime.strptime('29-November-2015 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V13','COUNT'] = 5
-    VISIT_DATES['V13','D0'] = datetime.datetime.strptime('9-March-2016 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V13','D1'] = datetime.datetime.strptime('9-March-2016 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V13','D2'] = datetime.datetime.strptime('10-March-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V13','D3'] = datetime.datetime.strptime('11-March-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V13','D4'] = datetime.datetime.strptime('12-March-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V13','D5'] = datetime.datetime.strptime('13-March-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V14','COUNT'] = 5
-    VISIT_DATES['V14','D0'] = datetime.datetime.strptime('28-September-2016 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V14','D1'] = datetime.datetime.strptime('28-September-2016 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V14','D2'] = datetime.datetime.strptime('29-September-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V14','D3'] = datetime.datetime.strptime('30-September-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V14','D4'] = datetime.datetime.strptime('01-October-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V14','D5'] = datetime.datetime.strptime('02-October-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V15','COUNT'] = 5
-    VISIT_DATES['V15','D0'] = datetime.datetime.strptime('23-November-2016 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V15','D1'] = datetime.datetime.strptime('23-November-2016 14:30:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V15','D2'] = datetime.datetime.strptime('24-November-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V15','D3'] = datetime.datetime.strptime('25-November-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V15','D4'] = datetime.datetime.strptime('26-November-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V15','D5'] = datetime.datetime.strptime('27-November-2016 12:00:00','%d-%B-%Y %H:%M:%S')
-
-
-    VISIT_DATES['V16','COUNT'] = 5
-    VISIT_DATES['V16','D0'] = datetime.datetime.strptime('08-March-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V16','D1'] = datetime.datetime.strptime('08-March-2017 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V16','D2'] = datetime.datetime.strptime('09-March-2017 13:00:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V16','D3'] = datetime.datetime.strptime('10-March-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V16','D4'] = datetime.datetime.strptime('11-March-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V16','D5'] = datetime.datetime.strptime('12-March-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-
-    VISIT_DATES['V17','COUNT'] = 5
-    VISIT_DATES['V17','D0'] = datetime.datetime.strptime('04-October-2017 00:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V17','D1'] = datetime.datetime.strptime('04-October-2017 12:00:00','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V17','D2'] = datetime.datetime.strptime('05-October-2017 13:00:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V17','D3'] = datetime.datetime.strptime('06-October-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V17','D4'] = datetime.datetime.strptime('07-October-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-    VISIT_DATES['V17','D5'] = datetime.datetime.strptime('08-October-2017 09:00:01','%d-%B-%Y %H:%M:%S')
-
-
-    message = "ALL OK "
-    ParshadList = {}
-
-
+    df_DateSheet_visit_pivot = ""
     try:
-        os.remove(dpath)
+        df_DateSheet_visit_pivot = pd.pivot_table(df_DateSheet_visit_days,index=['SewadarNewID'],columns=['Duty_Type'],aggfunc='count',margins=False,fill_value=0)
+        df_DateSheet_visit_pivot = df_DateSheet_visit_pivot.xs('DutyDate', axis=1, drop_level=True)
+    except:
+        df_DateSheet_visit_pivot = pd.DataFrame(df_CountSheet.xs('Name',axis=1))
+        df_DateSheet_visit_pivot.rename_axis("SewadarNewID", axis='index', inplace=True)
+        df_DateSheet_visit_pivot.loc[:, 'B'] = 0
+        df_DateSheet_visit_pivot.loc[:, 'D'] = 0
+        df_DateSheet_visit_pivot.loc[:, 'V'] = 0
+        df_DateSheet_visit_pivot.loc[:, 'W'] = 0
+
+
+
+    df_DateSheet_visit_pivot.loc[:, 'VISIT_COUNT'] = 0
+    try:
+        df_DateSheet_visit_pivot['VISIT_COUNT'] = df_DateSheet_visit_pivot['W']*2
+    except:
+        pass
+    try:
+        df_DateSheet_visit_pivot['VISIT_COUNT'] = df_DateSheet_visit_pivot['VISIT_COUNT'] + df_DateSheet_visit_pivot['D']
+    except:
+        pass
+    try:
+        df_DateSheet_visit_pivot['VISIT_COUNT'] = df_DateSheet_visit_pivot['VISIT_COUNT'] + df_DateSheet_visit_pivot['B']
+    except:
+        pass
+    try:
+        df_DateSheet_visit_pivot['VISIT_COUNT'] = df_DateSheet_visit_pivot['VISIT_COUNT'] + df_DateSheet_visit_pivot['V']
     except:
         pass
 
     try:
-        os.remove(dpathAttendance)
+        df_DateSheet_visit_pivot.drop(columns='B',inplace=True)
+    except:
+        pass
+    try:
+        df_DateSheet_visit_pivot.drop(columns='D',inplace=True)
+    except:
+        pass
+    try:
+        df_DateSheet_visit_pivot.drop(columns='V',inplace=True)
+    except:
+        pass
+    try:
+        df_DateSheet_visit_pivot.drop(columns='W',inplace=True)
     except:
         pass
 
-    logf.write("Collecting SSDate\n")
-    logf.write("SSDate @")
-    logf.write(str(datetime.datetime.now()) + "\n")
-    SSDate = db((db.SSAttendanceDate.DutyDate >= (datetime.datetime.strptime(DateSelectedStart,'%Y-%m-%d %H:%M:%S').replace(hour=0, minute=0, second=0, microsecond=0))) & (db.SSAttendanceDate.DutyDate <= (datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d %H:%M:%S').replace(hour=23, minute=59, second=59, microsecond=999)))).select('SewadarNewID','DutyDate','Duty_Type')
-    logf.write("MAchineDate @")
-    logf.write(str(datetime.datetime.now()) + "\n")
-    MachineDate = db((db.MachineAttendance.DATETIME >= (datetime.datetime.strptime(DateSelectedStart,'%Y-%m-%d %H:%M:%S') - datetime.timedelta(hours=((24 - int(DAY_END_TIME)) % 24)))) & (db.MachineAttendance.DATETIME <= (datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d %H:%M:%S') + datetime.timedelta(hours=int(DAY_END_TIME))))).select('GRNO','NewGRNO','DATETIME','TYPE')
-    logf.write("ExceptionMail @")
-    logf.write(str(datetime.datetime.now()) + "\n")
-    dExceptionMail = db(db.ParshadMailException).select()
-    print "Machine Attendance between date"
-    print "length of MachineDate =" + str(len(MachineDate))
 
-    ExceptionMail = {}
+    df_DateSheet_visit_pivot.to_excel(os.path.join(request.folder,'private','df_visit_days_pivot.xlsx'))
+
+    df_DateSheet_WW  = pd.DataFrame.from_records(db((db.SSAttendanceDate.DutyDate >= (datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d %H:%M:%S').replace(day=1,month=1,hour=0, minute=0, second=0, microsecond=0))) & (db.SSAttendanceDate.DutyDate <= (datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d %H:%M:%S').replace(hour=23, minute=59, second=59, microsecond=999))) & (db.SSAttendanceDate.Duty_Type == 'W')).select().as_list())
+    df_DateSheet_WW['SewadarNewID'] = df_DateSheet_WW['SewadarNewID'].str.replace('BH0011','')
+    df_DateSheet_WW_pivot = pd.pivot_table(df_DateSheet_WW,index=['SewadarNewID'],columns=['Duty_Type'],aggfunc='count',margins=False,fill_value=0)
+    df_DateSheet_WW_pivot = df_DateSheet_WW_pivot.xs('DutyDate', axis=1, drop_level=True)
+    try:
+        df_DateSheet_WW_pivot.drop(columns='D',inplace=True)
+    except:
+        pass
+    try:
+        df_DateSheet_WW_pivot.drop(columns='B',inplace=True)
+    except:
+        pass
+    try:
+        df_DateSheet_WW_pivot.drop(columns='V',inplace=True)
+    except:
+        pass
+
+    df_DateSheet_WW_pivot.rename(columns={'W':'WW_Count'},inplace=True)
+    df_DateSheet_WW_pivot.to_excel(os.path.join(request.folder,'private','df_dates_WW_pivot.xlsx'))
+
+    df_DateSheet_mandatory_days = pd.DataFrame.from_records(db((db.SSAttendanceDate.DutyDate >= (datetime.datetime.strptime(MandatoryDaysDateStart,'%Y-%m-%d %H:%M:%S'))) & (db.SSAttendanceDate.DutyDate <= (datetime.datetime.strptime(MandatoryDaysDateEnd,'%Y-%m-%d %H:%M:%S')))).select().as_list())
+    df_DateSheet_mandatory_days['SewadarNewID'] = df_DateSheet_mandatory_days['SewadarNewID'].str.replace('BH0011','')
+    df_DateSheet_mandatory_days.to_excel(os.path.join(request.folder,'private','df_DateSheet_mandatory_days.xlsx'))
+
+    df_DateSheet_mandatory_pivot = pd.pivot_table(df_DateSheet_mandatory_days,index=['SewadarNewID'],columns=['Duty_Type'],aggfunc='count',margins=False,fill_value=0)
+    df_DateSheet_mandatory_pivot = df_DateSheet_mandatory_pivot.xs('DutyDate', axis=1, drop_level=True)
+    df_DateSheet_mandatory_pivot.loc[: ,'MANDATORY_COUNT'] = 0
+    try:
+        df_DateSheet_mandatory_pivot.loc[:, 'MANDATORY_COUNT'] = df_DateSheet_mandatory_pivot.loc[:, 'W']*2
+        df_DateSheet_mandatory_pivot.drop(columns='W',inplace=True)
+    except:
+        pass
+    try:
+        df_DateSheet_mandatory_pivot.loc[:, 'MANDATORY_COUNT'] = df_DateSheet_mandatory_pivot.loc[:, 'D'] + df_DateSheet_mandatory_pivot.loc[:, 'MANDATORY_COUNT']
+        df_DateSheet_mandatory_pivot.drop(columns='D',inplace=True)
+    except:
+        pass
+
+    try:
+        df_DateSheet_mandatory_pivot[:, 'MANDATORY_COUNT'] = df_DateSheet_mandatory_pivot.loc[:, 'MANDATORY_COUNT'] + df_DateSheet_mandatory_pivot.loc[:, 'V']
+        df_DateSheet_mandatory_pivot.drop(columns='V',inplace=True)
+    except:
+        pass
+    try:
+        df_DateSheet_mandatory_pivot[:, 'MANDATORY_COUNT'] = df_DateSheet_mandatory_pivot.loc[:, 'MANDATORY_COUNT'] + df_DateSheet_mandatory_pivot.loc[:, 'B']
+        df_DateSheet_mandatory_pivot.drop(columns='B',inplace=True)
+    except:
+        pass
+
+    df_DateSheet_mandatory_pivot.to_excel(os.path.join(request.folder,'private','df_mandatory_dates_pivot.xlsx'))
+
+    df_MergedMasterSheet = df_CountSheet.merge(df_MasterSheet,on=['SewadarNewID'],how='left')
+    #df_MergedMasterSheet = df_MasterSheet.merge(df_CountSheet,on=['SewadarNewID'],how='left')
+    #Add count of visit days and mandatory days
+    df_MergedMasterSheet = df_MergedMasterSheet.merge(df_DateSheet_visit_pivot,on=['SewadarNewID'],how='left')
+    df_MergedMasterSheet = df_MergedMasterSheet.merge(df_DateSheet_mandatory_pivot,on=['SewadarNewID'],how='left')
+    try:
+        df_MergedMasterSheet = df_MergedMasterSheet.merge(df_DateSheet_WW_pivot,on=['SewadarNewID'],how='left')
+    except:
+        df_MergedMasterSheet.loc[:,'WW_Count'] = 0
+
+    df_MergedMasterSheet.to_excel(os.path.join(request.folder,'private','df_MergedMaster_all_input.xlsx'))
     #Keywords for exception
     #ALL , Visits Count,Current Visit
-    for row in dExceptionMail:
-        ExceptionMail[row.NewGRNO,row.ExceptionField] = row.Status
+    df_ExceptionMail = pd.DataFrame.from_records(db(db.ParshadMailException).select().as_list())
+    df_MergedMasterSheet = df_MergedMasterSheet.merge(df_ExceptionMail,on=['SewadarNewID'],how='left')
+    df_SSTentativeParshadList = pd.DataFrame.from_records(db(db.SSTentativeParshadList.id > 0).select().as_list())
+    df_MergedMasterSheet = df_MergedMasterSheet.merge(df_SSTentativeParshadList,on=['SewadarNewID'],how='left')
+    logf.write("fetched records\n")
+    message = "ALL OK "
 
-
-    ParshadList['SEWADARS'] = []
-    SSAttendanceDictionary = {}
-    print "Collecting SSDate"
-    logf.write("Collecting SSDate\n")
-    for SSEntry in SSDate:
-        ParshadList['SEWADARS'].append(SSEntry.SewadarNewID)
-        if SSEntry.Duty_Type == 'W':
-            logf.write("Going to pop any existing D type attendance as a SS WW is found for " + SSEntry.SewadarNewID + " " + str(SSEntry.DutyDate) + "\n")
-            now = datetime.datetime.now()
-            SSAttendanceDictionary[SSEntry.SewadarNewID,Roundoffdate(SSEntry.DutyDate,23),'W'] = SSEntry.DutyDate
-            try:
-                ParshadList[SSEntry.SewadarNewID,'SSCount'] = ParshadList[SSEntry.SewadarNewID,'SSCount'] + 2
-            except:
-                ParshadList[SSEntry.SewadarNewID,'SSCount'] = 2
-            try:
-                if SSEntry.DutyDate.year == now.year:
-                    ParshadList[SSEntry.SewadarNewID,'SSWWCount'] = ParshadList[SSEntry.SewadarNewID,'SSWWCount'] + 1
-            except:
-                if SSEntry.DutyDate.year == now.year:
-                    ParshadList[SSEntry.SewadarNewID,'SSWWCount'] = 1
-            try:
-                ParshadList[SSEntry.SewadarNewID,'SSWWCountOld'] = ParshadList[SSEntry.SewadarNewID,'SSWWCount']
-            except:
-                ParshadList[SSEntry.SewadarNewID,'SSWWCountOld'] = 0
-
-            #A D type attendance was counted first if pop was successful. Hence need to decrement by 1 to compensate
-            if SSAttendanceDictionary.pop((SSEntry.SewadarNewID,Roundoffdate(SSEntry.DutyDate,23),'D'),None) == None:
-                pass
-            else:
-                ParshadList[SSEntry.SewadarNewID,'SSCount'] = ParshadList[SSEntry.SewadarNewID,'SSCount'] - 1
-            logf.write("Popped to pop any existing D type attendance as a SS WW is found for " + SSEntry.SewadarNewID + " " + str(SSEntry.DutyDate) + "\n")
-        else:
-            try:
-                a = SSAttendanceDictionary[SSEntry.SewadarNewID,Roundoffdate(SSEntry.DutyDate,23),'W']
-            except:
-                SSAttendanceDictionary[SSEntry.SewadarNewID,Roundoffdate(SSEntry.DutyDate,23),'D'] = SSEntry.DutyDate
-                try:
-                    ParshadList[SSEntry.SewadarNewID,'SSCount'] = ParshadList[SSEntry.SewadarNewID,'SSCount'] + 1
-                except:
-                    ParshadList[SSEntry.SewadarNewID,'SSCount'] = 1
-
-        ParshadList[SSEntry.SewadarNewID,'SSCountOld'] = ParshadList[SSEntry.SewadarNewID,'SSCount']
-
-    MachineAttendanceAdditional = {}
-
-
-    try:
-        db.tempMachineAttendanceAdditional.drop()
-    except:
-        pass
-
-    #Now define the table
-    db.define_table('tempMachineAttendanceAdditional',
-            Field('GRNO','string'),
-            Field('NewGRNO','string'),
-            Field('Duty_Type','string'),
-            Field('DutyDate','datetime'),
-            Field('DutyDateList','list:string'),
-            migrate=True,
-            redefine=True,
-            format='%(NewGRNO)s')
-
-    try:
-        db(db.tempMachineAttendanceAdditional.id > 0).delete()
-    except:
-        pass
-
-    print "Collecting Machine Date"
-
-    for MEntry in MachineDate:
-        if ((MEntry.DATETIME < VISIT_DATES['V13','D5']) and (MEntry.DATETIME > VISIT_DATES['V13','D0'])) or ((MEntry.DATETIME < VISIT_DATES['V12','D5']) and (MEntry.DATETIME > VISIT_DATES['V12','D0'])) or ((MEntry.DATETIME < VISIT_DATES['V14','D5']) and (MEntry.DATETIME > VISIT_DATES['V14','D0'])):
-            pass
-        else:
-            #Select earliest entry but give preference to WW attendance
-            if MEntry.TYPE == 'WMANUAL':
-                try:
-                    a = SSAttendanceDictionary[MEntry.NewGRNO,Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'W']
-                except:
-                    logf.write("Going to pop any existing D type attendance as a WW is found for " + MEntry.NewGRNO + " " + str(Roundoffdate(MEntry.DATETIME,DAY_END_TIME)) + "\n")
-                    try:
-                        MachineAttendanceAdditional[MEntry.NewGRNO,"",Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'W'].append(MEntry.DATETIME)
-                    except:
-                        MachineAttendanceAdditional[MEntry.NewGRNO,"",Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'W'] = [MEntry.DATETIME]
-                    MachineAttendanceAdditional.pop((MEntry.NewGRNO,"",Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'D'),None)
-                    logf.write("Popped any existing D type attendance as a WW is found for " + MEntry.NewGRNO + " " + str(Roundoffdate(MEntry.DATETIME,DAY_END_TIME)) + "\n")
-            else:
-                try:
-                    a = MachineAttendanceAdditional[MEntry.NewGRNO,"",Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'W']
-                except:
-                    try:
-                        a = SSAttendanceDictionary[MEntry.NewGRNO,Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'W']
-                    except:
-                        try:
-                            a = SSAttendanceDictionary[MEntry.NewGRNO,Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'D']
-                        except:
-                            try:
-                                MachineAttendanceAdditional[MEntry.NewGRNO,"",Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'D'].append(MEntry.DATETIME)
-                            except:
-                                MachineAttendanceAdditional[MEntry.NewGRNO,"",Roundoffdate(MEntry.DATETIME,DAY_END_TIME),'D'] = [MEntry.DATETIME]
-
-
-
-    print "Preparing SS Count"
-
-    for key, value in MachineAttendanceAdditional.iteritems():
-        NewGRNO, GRNO, DutyDate , DutyType= key
-        ParshadList['SEWADARS'].append(NewGRNO)
-        if DutyType == 'W':
-            try:
-                ParshadList[NewGRNO,'SSCount'] = ParshadList[NewGRNO,'SSCount'] + 2
-            except:
-                ParshadList[NewGRNO,'SSCount'] = 2
-
-            #A D type attendance was counted first if pop was successful. Hence need to decrement by 1 to compensate
-            try:
-                a = SSAttendanceDictionary[NewGRNO,DutyDate,'D']
-                ParshadList[NewGRNO,'SSCount'] = ParshadList[NewGRNO,'SSCount'] - 1
-            except:
-                pass
-
-            if DutyDate.year == now.year:
-                try:
-                    ParshadList[NewGRNO,'SSWWCount'] = ParshadList[NewGRNO,'SSWWCount'] + 1
-                except:
-                    ParshadList[NewGRNO,'SSWWCount'] = 1
-            logf.write("Found and incremented WMANUAL attendance : " + NewGRNO + " " + str(DutyDate) + "\n")
-        else:
-            try:
-                ParshadList[NewGRNO,'SSCount'] = ParshadList[NewGRNO,'SSCount'] + 1
-            except:
-                ParshadList[NewGRNO,'SSCount'] = 1
-
-
-    for key, value in MachineAttendanceAdditional.iteritems():
-        MachineAttendanceAdditionalDictionary = {}
-        NewGRNO, GRNO, DutyDate , DutyType = key
-        ParshadList['SEWADARS'].append(NewGRNO)
-        MachineAttendanceAdditionalDictionary['NewGRNO'] = NewGRNO
-        MachineAttendanceAdditionalDictionary['GRNO'] = GRNO
-        MachineAttendanceAdditionalDictionary['Duty_Type'] = DutyType
-        MachineAttendanceAdditionalDictionary['DutyDate'] = DutyDate
-        MachineAttendanceAdditionalDictionary['DutyDateList'] = value
-        try:
-            ParshadList[NewGRNO,'Before Visit Machine Additional'].append(DutyDate)
-        except:
-            ParshadList[NewGRNO,'Before Visit Machine Additional'] = [DutyDate]
-        db.tempMachineAttendanceAdditional.insert(**MachineAttendanceAdditionalDictionary)
-
-
-    del MachineAttendanceAdditional
-
-    print "Creating Attendance Sheets"
-
-    if DumpSSAttendance == 'YES':
-        dSSdate = dworkbookAttendance.create_sheet(0)
-        dSSdate.title = "SSDate"
-        dSSdate.append(['SewadarNewID','DutyDate','Duty_Type'])
-        for row in SSDate:
-            dSSdate.append([row.SewadarNewID , row.DutyDate , row.Duty_Type])
-
-    if DumpMachineAttendance == 'YES':
-        dMachineAttendance = dworkbookAttendance.create_sheet(0)
-        dMachineAttendance.title = "MachineAttendance"
-        dMachineAttendance.append(['GRNO','NewGRNO','DATETIME','TYPE'])
-        for row in MachineDate:
-            dMachineAttendance.append([row.GRNO,row.NewGRNO,row.DATETIME,row.TYPE])
-
-    MachineDifference = db(db.tempMachineAttendanceAdditional.id > 0).select()
-
-    dMachineDifference = dworkbook.create_sheet(0)
-    dMachineDifference.title = "MachineDifference"
-    dMachineDifference.append(['NewGRNO','GRNO','Duty_Type','DutyDate','DutyDateList','TimeDifference'])
-    for row in MachineDifference:
-        DutyDateList = ", ".join(map(str, row.DutyDateList))
-        n = len(row.DutyDateList)
-        TimeDifference = max(map(datetime.datetime.strptime,row.DutyDateList,['%Y-%m-%d %H:%M:%S']*n)) - min(map(datetime.datetime.strptime,row.DutyDateList,['%Y-%m-%d %H:%M:%S']*n))
-        dMachineDifference.append([row.NewGRNO,row.GRNO,row.Duty_Type,row.DutyDate,DutyDateList,str(TimeDifference)])
-
-
-    dworkbookAttendance.save(dpathAttendance)
-
-
-    throttle = 1
-
-    for visit in xrange(0,TOTAL_VISIT):
-        VCOUNT = 0
-        VCOUNT = VISIT_DATES['V'+str(visit),'COUNT']
-
-        vc = 'V'+str(visit)
-
-        for day in xrange(0,VCOUNT):
-            dc = 'D'+str(day)
-            dc1 = 'D'+str(day+1)
-            print "Analyzing " + vc + dc
-
-            SSDate = db((db.SSAttendanceDate.DutyDate >= datetime.datetime(VISIT_DATES[vc,dc].year,VISIT_DATES[vc,dc].month,VISIT_DATES[vc,dc].day,0,0,0)) & (db.SSAttendanceDate.DutyDate <= datetime.datetime((VISIT_DATES[vc,dc]+datetime.timedelta(hours=24)).year,(VISIT_DATES[vc,dc]+datetime.timedelta(hours=24)).month,(VISIT_DATES[vc,dc]+datetime.timedelta(hours=24)).day,0,0,0))).select('SewadarNewID')
-            MachineDate = db((db.MachineAttendance.DATETIME >= VISIT_DATES[vc,dc]) & (db.MachineAttendance.DATETIME <= VISIT_DATES[vc,dc1])).select('NewGRNO')
-            print "length of SSDate =" + str(len(SSDate))
-            print "length of MachineDate =" + str(len(MachineDate))
-
-            for row in SSDate:
-                ParshadList['SEWADARS'].append(row.SewadarNewID)
-                try:
-                    a = ParshadList[row.SewadarNewID,vc]
-                except:
-                    ParshadList[row.SewadarNewID,vc] = VCOUNT - day
-
-            for row in MachineDate:
-                ParshadList['SEWADARS'].append(row.NewGRNO)
-                try:
-                    if ParshadList[row.NewGRNO,vc] < VCOUNT - day :
-                        ParshadList[row.NewGRNO,vc] = VCOUNT - day
-                        try:
-                            ParshadList[row.NewGRNO,'Additional Machine Visit Days'].append(vc + dc + ' onwards')
-                        except:
-                            ParshadList[row.NewGRNO,'Additional Machine Visit Days'] = [vc + dc + ' onwards']
-                except:
-                    ParshadList[row.NewGRNO,vc] = (VCOUNT - day)
-                    try:
-                        ParshadList[row.NewGRNO,'Additional Machine Visit Days'].append(vc + dc + ' onwards')
-                    except:
-                        ParshadList[row.NewGRNO,'Additional Machine Visit Days'] = [vc + dc + ' onwards']
-            del SSDate
-            del MachineDate
-
-
-    print "reading tentative parshad list"
-    SSTentativeParshadList = db(db.SSTentativeParshadList.id > 0).select('NewGRNO','Status')
-
-    for row in SSTentativeParshadList:
-        ParshadList['SEWADARS'].append(row.NewGRNO)
-        ParshadList[row.NewGRNO,'SS Tentative Parshad Status'] = row.Status
-
-
-    print "reading initiated list"
-    InitiatedList = db(db.InitiatedList.id > 0).select('NewGRNO','Status')
-
-    for row in InitiatedList:
-        ParshadList['SEWADARS'].append(row.NewGRNO)
-        ParshadList[row.NewGRNO,'Initiation Status'] = row.Status
-
-
-    print "reading previous parshad list"
-    PreviousParshadList = db(db.PreviousParshadList.id > 0).select('NewGRNO','Status')
-
-    for row in PreviousParshadList:
-        ParshadList['SEWADARS'].append(row.NewGRNO)
-        ParshadList[row.NewGRNO,'Previous Visit Parshad Status'] = row.Status
-
-    print "Analyzing Current Visit"
-    logf.write("Analkysinz current visit\n")
-
+    df_MergedMasterSheet = df_MergedMasterSheet.set_index(['SewadarNewID'])
     #time.sleep (1);
-    for day in xrange(0,SSCURRENT_VISIT['COUNT']):
-        dc = 'D'+str(day)
-        dc1 = 'D'+str(day+1)
-        print "Analyzing Current Visit day " + str(day)
+    for row in df_DateSheet_visit_days.iterrows():
+        df_MergedMasterSheet.at[row[1]['SewadarNewID'],row[1]['DutyDate'].replace(hour=0, minute=0, second=0, microsecond=0)] = 'P'
 
-        SSDate = db((db.SSAttendanceDate.DutyDate >= SSCURRENT_VISIT['D'+str(day)]) & (db.SSAttendanceDate.DutyDate <= SSCURRENT_VISIT['D'+str(day+1)])).select('SewadarNewID')
-        print "Collecting SSDate"
-        time.sleep (1);
-        MachineDate = db((db.MachineAttendance.DATETIME >= SSCURRENT_VISIT['D'+str(day)]) & (db.MachineAttendance.DATETIME <= SSCURRENT_VISIT['D'+str(day+1)])).select('NewGRNO')
-        MachineDateMorning = db((db.MachineAttendance.DATETIME >= SSCURRENT_VISIT_MORNING_START['D'+str(day)]) & (db.MachineAttendance.DATETIME <= SSCURRENT_VISIT_MORNING_END['D'+str(day+1)])).select('NewGRNO')
-        MachineDateEvening = db((db.MachineAttendance.DATETIME >= SSCURRENT_VISIT_EVENING_START['D'+str(day)]) & (db.MachineAttendance.DATETIME <= SSCURRENT_VISIT_EVENING_END['D'+str(day+1)])).select('NewGRNO')
-        print "Collected Machine and SSDate"
+    for row in df_DateSheet_mandatory_days.iterrows():
+        df_MergedMasterSheet.at[row[1]['SewadarNewID'],row[1]['DutyDate'].replace(hour=0, minute=0, second=0, microsecond=0)] = 'M'
 
-        for row in SSDate:
-            ParshadList['SEWADARS'].append(row.SewadarNewID)
+    #Fill Empty WW_COunt and Total and TotalVisit with 0
+    df_MergedMasterSheet['Total'].fillna(0,inplace=True)
+    df_MergedMasterSheet['TotalVisit'].fillna(0,inplace=True)
+    df_MergedMasterSheet['WW_Count'].fillna(0,inplace=True)
+    #Start the checks
+    df_MergedMasterSheet.loc[:,'ParshadStatus'] = 'OK'
+    df_MergedMasterSheet.loc[:,'ParshadRemark'] = 'OK'
+    for row in df_MergedMasterSheet.iterrows():
+        if row[1]['ExceptionField'] == 'ALL':
+            df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'OK'
+            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'CO'
+            continue
+        #Check initiation
+
+        if not(row[1]['ExceptionField'] == 'Initiation'):
+            if row[1]['Initiated_Status'] == 'Y':
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
+                try:
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Non Initiated"
+                except:
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Non Initiated"
+
+        #Check 9 visit
+        if not(row[1]['ExceptionField'] == 'Visits Count'):
             try:
-                a = ParshadList[row.SewadarNewID,'CV']
-            except:
-                ParshadList[row.SewadarNewID,'CV'] = SSCURRENT_VISIT['COUNT'] - day
-                ParshadList[row.SewadarNewID,'CVOld'] = SSCURRENT_VISIT['COUNT'] - day
-
-            ParshadList[row.SewadarNewID,'CV '+ dc] = 'P'
-
-
-        print "Analyzed SSDate for current visit"
-
-        for row in MachineDate:
-            ParshadList['SEWADARS'].append(row.NewGRNO)
-            try:
-                a = ParshadList[row.NewGRNO,'CV']
-            except:
-                ParshadList[row.NewGRNO,'CV'] = SSCURRENT_VISIT['COUNT'] - day
-
-            try:
-                a = ParshadList[row.NewGRNO,'CV '+ dc]
-            except:
-                ParshadList[row.NewGRNO,'CV '+ dc] = 'C'
-
-        for row in MachineDateMorning:
-            ParshadList['SEWADARS'].append(row.NewGRNO)
-            ParshadList[row.NewGRNO,'CVMORNING',day] = 'P'
-
-        for row in MachineDateEvening:
-            ParshadList['SEWADARS'].append(row.NewGRNO)
-            ParshadList[row.NewGRNO,'CVMORNING',day] = 'P'
-
-        print "Analyzed Machine Dates for current visit"
-
-    ParshadList['SEWADARS'] = set(ParshadList['SEWADARS'])
-
-    print "Creating Super Set Parshad Status"
-    logf.write("Creating Super set\n")
-
-    dParshadList = dworkbook.create_sheet(0)
-    dParshadList.title = "ParshadList"
-    dParshadList.append(['NewGRNO','SSCount','SSCountOld','CVCount','CVCountOld','MachineBeforeVisitAdditional','WW Count','CV D1','CV D2','CV D3','CV D4','CV D5','MachinePreviousVisitAddition','InitiationStatus','SS Tentative Parshad Status','Previous Visit Parshad Status','VISIT_COUNTS','SSWWCount','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14'])
-    row_num = 1
-    for Sewadar in ParshadList['SEWADARS']:
-        #print "SuperSet Sewadar " + Sewadar
-        try:
-            SSCount = ParshadList[Sewadar,'SSCount']
-        except:
-            SSCount = 0
-
-        try:
-            SSWWCount = ParshadList[Sewadar,'SSWWCount']
-        except:
-            SSWWCount = 0
-
-        try:
-            SSWWCountOld = ParshadList[Sewadar,'SSWWCountOld']
-        except:
-            SSWWCountOld = 0
-
-        try:
-            SSCountOld = ParshadList[Sewadar,'SSCountOld']
-        except:
-            SSCountOld = 0
-        try:
-            CVCount = ParshadList[Sewadar,'CV']
-        except:
-            CVCount = 0
-        try:
-            CVCountOld = ParshadList[Sewadar,'CVOld']
-        except:
-            CVCountOld = 0
-        try:
-            CVD0 = ParshadList[Sewadar,'CV D0']
-        except:
-            CVD0 = 'A'
-        try:
-            CVD1 = ParshadList[Sewadar,'CV D1']
-        except:
-            CVD1 = 'A'
-        try:
-            CVD2 = ParshadList[Sewadar,'CV D2']
-        except:
-            CVD2 = 'A'
-        try:
-            CVD3 = ParshadList[Sewadar,'CV D3']
-        except:
-            CVD3 = 'A'
-        try:
-            CVD4 = ParshadList[Sewadar,'CV D4']
-        except:
-            CVD4 = 'A'
-        try:
-            MachineBeforeVisitAdditional = ", ".join(map(str, ParshadList[Sewadar,'Before Visit Machine Additional']))
-        except:
-            MachineBeforeVisitAdditional = ""
-        try:
-            MachinePreviousVisitAddition = ", ".join(map(str, ParshadList[Sewadar,'Additional Machine Visit Days']))
-        except:
-            MachinePreviousVisitAddition = ""
-        try:
-            InitiationStatus = ParshadList[Sewadar,'Initiation Status']
-        except:
-            InitiationStatus = "Not Found"
-        try:
-            PreviousVisitParshadStatus = ParshadList[Sewadar,'Previous Visit Parshad Status']
-        except:
-            PreviousVisitParshadStatus = "Not Found"
-        try:
-            SSTentativeParshadStatus = ParshadList[Sewadar,'SS Tentative Parshad Status']
-        except:
-            SSTentativeParshadStatus = "Not Found"
-
-        dParshadList.append([Sewadar,SSCount,SSCountOld,CVCount,CVCountOld,MachineBeforeVisitAdditional,SSWWCount,CVD0,CVD1,CVD2,CVD3,CVD4,MachinePreviousVisitAddition,InitiationStatus,SSTentativeParshadStatus,PreviousVisitParshadStatus])
-
-        row_num = row_num + 1
-
-        dParshadList.cell(get_column_letter(17)+str(row_num)).value = SSWWCountOld
-        visit_counts = 0
-        for visit in xrange(0,TOTAL_VISIT):
-            try:
-                dParshadList.cell(get_column_letter(visit+19)+str(row_num)).value = ParshadList[Sewadar,'V'+str(visit)]
-                if ParshadList[Sewadar,'V'+str(visit)] >= 3:
-                    visit_counts = visit_counts + 1
-            except:
-                dParshadList.cell(get_column_letter(visit+19)+str(row_num)).value = 0
-
-        dParshadList.cell(get_column_letter(18)+str(row_num)).value = visit_counts
-
-
-    MasterSheet = db(db.MasterSheet.id > 0).select('SewadarNewID','GR_NO','NAME','CANTEEN','DEV_DTY','Age')
-    dWorkingParshad = dworkbook.create_sheet(0)
-    dWorkingParshad.title = "WorkingParshad"
-    dWorkingParshad.append(['SewadarNewID','GR_NO','NAME','CANTEEN','DEV_DTY','InitiationStatus','SS Tentative Parshad Status','CANTEEN Parshad Status','CANTEEN Parshad Remarks','SSCount','SSCountNew','CVCount','CVCountNew','MachineBeforeVisitAdditional','WW Count','CV D1','CV D2','CV D3','CV D4','CV D5','MachinePreviousVisitAddition','Previous Visit Parshad Status','SSWWCOUNTOLD','Gender','Age','VISIT_COUNTS','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14'])
-
-    print "Creating Master Specific Parshad Status"
-    logf.write("Creating Master Specific Parshad Status\n")
-
-    row_num = 2
-    for row in MasterSheet:
-        Sewadar = row.SewadarNewID
-        #print "Master Sewadar " + Sewadar
-
-        dWorkingParshad.cell(get_column_letter(1) + str(row_num)).value = row.SewadarNewID
-        dWorkingParshad.cell(get_column_letter(2) + str(row_num)).value = row.GR_NO
-        dWorkingParshad.cell(get_column_letter(3) + str(row_num)).value = row.NAME
-        dWorkingParshad.cell(get_column_letter(4) + str(row_num)).value = row.CANTEEN
-        dWorkingParshad.cell(get_column_letter(5) + str(row_num)).value = row.DEV_DTY
-
-        Age = row.Age
-
-
-
-
-        try:
-            SSCount = ParshadList[Sewadar,'SSCount']
-        except:
-            SSCount = 0
-        try:
-            SSCountOld = ParshadList[Sewadar,'SSCountOld']
-        except:
-            SSCountOld = 0
-        try:
-            SSWWCount = ParshadList[Sewadar,'SSWWCount']
-        except:
-            SSWWCount = 0
-        try:
-            SSWWCountOld = ParshadList[Sewadar,'SSWWCountOld']
-        except:
-            SSWWCountOld = 0
-        try:
-            CVCount = ParshadList[Sewadar,'CV']
-        except:
-            CVCount = 0
-        try:
-            CVCountOld = ParshadList[Sewadar,'CVOld']
-        except:
-            CVCountOld = 0
-        try:
-            CVD0 = ParshadList[Sewadar,'CV D0']
-        except:
-            CVD0 = 'A'
-        try:
-            CVD1 = ParshadList[Sewadar,'CV D1']
-        except:
-            CVD1 = 'A'
-        try:
-            CVD2 = ParshadList[Sewadar,'CV D2']
-        except:
-            CVD2 = 'A'
-        try:
-            CVD3 = ParshadList[Sewadar,'CV D3']
-        except:
-            CVD3 = 'A'
-        try:
-            CVD4 = ParshadList[Sewadar,'CV D4']
-        except:
-            CVD4 = 'A'
-        try:
-            MachineBeforeVisitAdditional = ", ".join(map(str, ParshadList[Sewadar,'Before Visit Machine Additional']))
-        except:
-            MachineBeforeVisitAdditional = ""
-        try:
-            MachinePreviousVisitAddition = ", ".join(map(str, ParshadList[Sewadar,'Additional Machine Visit Days']))
-        except:
-            MachinePreviousVisitAddition = ""
-        try:
-            InitiationStatus = ParshadList[Sewadar,'Initiation Status']
-        except:
-            InitiationStatus = "Not Found"
-        try:
-            PreviousVisitParshadStatus = ParshadList[Sewadar,'Previous Visit Parshad Status']
-        except:
-            PreviousVisitParshadStatus = "Not Found"
-        try:
-            SSTentativeParshadStatus = ParshadList[Sewadar,'SS Tentative Parshad Status']
-        except:
-            SSTentativeParshadStatus = "Not Found"
-
-        dWorkingParshad.cell(get_column_letter(23)+str(row_num)).value = SSWWCountOld
-
-        visit_counts = 0
-        for visit in xrange(0,TOTAL_VISIT):
-            try:
-                dWorkingParshad.cell(get_column_letter(visit+27)+str(row_num)).value = ParshadList[Sewadar,'V'+str(visit)]
-                if ParshadList[Sewadar,'V'+str(visit)] >= 3:
-                    visit_counts = visit_counts + 1
-            except:
-                dWorkingParshad.cell(get_column_letter(visit+27)+str(row_num)).value = 0
-
-        try:
-            dWorkingParshad.cell(get_column_letter(24)+str(row_num)).value = SSCountDict[Sewadar,'GENDER']
-        except:
-            dWorkingParshad.cell(get_column_letter(24)+str(row_num)).value = "Missing in SSCount sheet"
-
-        try:
-            dWorkingParshad.cell(get_column_letter(25)+str(row_num)).value = Age
-        except:
-            dWorkingParshad.cell(get_column_letter(25)+str(row_num)).value = "Missing in Master.."
-
-
-
-        try:
-            if visit_counts < SSCountDict[Sewadar,'TotalVisit']:
-                visit_counts = SSCountDict[Sewadar,'TotalVisit']
-        except:
-            test = 1
-
-        dWorkingParshad.cell(get_column_letter(26)+str(row_num)).value = visit_counts
-
-        CanteenParshadStatus = "OK"
-        CanteenParshadRemark = []
-
-
-        try:
-            if (SSCountDict[row.SewadarNewID,'status'].upper() == 'PERMANENT') | (SSCountDict[row.SewadarNewID,'status'].upper() == 'ELDERLY'):
-                pass
-            else:
-                if (int(visit_counts) < int(VisitCountCutOff)):
-                    try:
-                        CanteenParshadRemark.append(ExceptionMail[row.SewadarNewID,'Visits Count'])
-                        CanteenParshadStatus = "Tentative"
-                    except:
+                if row[1]['status'].upper() != 'PERMANENT':
+                    if int(row[1]['TotalVisit']) < int(VisitCountCutOff):
+                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                         try:
-                            CanteenParshadRemark = [ExceptionMail[row.SewadarNewID,'ALL']]
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits Short'
                         except:
-                            CanteenParshadRemark.append(str(visit_counts) + " Visits Attended")
-                            CanteenParshadStatus = "Not OK"
-        except:
-            CanteenParshadRemark.append("SS Missing")
-            CanteenParshadStatus = "SS Missing"
-
-        if (CVCount < int(CVCutOff)):
-            try:
-                CanteenParshadRemark.append(ExceptionMail[row.SewadarNewID,'Current Visit'])
-                if CanteenParshadStatus == "OK":
-                    CanteenParshadStatus = "Tentative"
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits'
             except:
-                try:
-                    CanteenParshadRemark = [ExceptionMail[row.SewadarNewID,'ALL']]
-                except:
-                    CanteenParshadRemark.append("Current Visit Short")
-                    CanteenParshadStatus = "Not OK"
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:Status'
+                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:Status'
 
-        if (row.SewadarNewID.find("G") > -1):
-            if (SSCount >= int(WWWaiver)) | (Age >= int(WWAgeWaiver)):
-                pass
+
+        #Check mandatory attendance
+        if not(row[1]['ExceptionField'] == 'Mandatory Days'):
+            if not(pd.isnull(row[1]['MANDATORY_COUNT'])):
+                if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
+                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
+                    try:
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
+                    except:
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
             else:
-                logf.write(str(SSCount) + ' < ' + str(WWWaiver) + '\n')
-                if (SSWWCount < int(WWCutOff)):
-                    try:
-                        CanteenParshadRemark.append(ExceptionMail[row.SewadarNewID,'WW Count'])
-                        if CanteenParshadStatus == "OK":
-                            CanteenParshadStatus = "Tentative"
-                    except:
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:MANDATORY_COUNT'
+                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:MANDATORY_COUNT'
+        #Check WW
+        if not(row[1]['ExceptionField'] == 'WW Count'):
+            if not(pd.isnull(row[1]['gender'])):
+                if row[1]['gender'].upper() == "MALE":
+                    if int(row[1]['WW_Count']) < int(WWCutOff):
+                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                         try:
-                            CanteenParshadRemark = [ExceptionMail[row.SewadarNewID,'ALL']]
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "WW Short by " + str(int(WWCutOff) - int(row[1]['WW_Count']))
                         except:
-                            CanteenParshadRemark.append(str(SSWWCount) + " WW done")
-                            CanteenParshadStatus = "Not OK"
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = " WW Short by " + str(int(WWCutOff) - int(row[1]['WW_Count']))
+            else:
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:WW'
+                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:WW'
 
-            if (SSCount < int(SSCountCutOffGents)):
-                try:
-                    CanteenParshadRemark.append(ExceptionMail[row.SewadarNewID,'SS Count'])
-                    if CanteenParshadStatus == "OK":
-                        CanteenParshadStatus = "Tentative"
-                except:
+        #Check Before visit
+        if not(row[1]['ExceptionField'] == 'SS Count'):
+            if not(pd.isnull(row[1]['gender'])):
+                if row[1]['gender'].upper() == "MALE":
+                    if int(row[1]['Total']) < int(SSCountCutOffGents):
+                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
+                        try:
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Before Visit Attendance Short by " + str(int(SSCountCutOffGents) - int(row[1]['Total']))
+                        except:
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Before Visit Attendance Short by " + str(int(SSCountCutOffGents) - int(row[1]['Total']))
+                else:
+                    if int(row[1]['Total']) < int(SSCountCutOffLadies):
+                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
+                        try:
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Before Visit Attendance Short by " + str(int(SSCountCutOffLadies) - int(row[1]['Total']))
+                        except:
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Before Visit Attendance Short by " + str(int(SSCountCutOffLadies) - int(row[1]['Total']))
+
+            else:
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:Total'
+                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:Total'
+
+        #Check visit attendance
+        if not(row[1]['ExceptionField'] == 'Current Visit'):
+            if not(pd.isnull(row[1]['VISIT_COUNT'])):
+                if int(row[1]['VISIT_COUNT']) < int(CVCutOff):
+                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                     try:
-                        CanteenParshadRemark = [ExceptionMail[row.SewadarNewID,'ALL']]
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
                     except:
-                        CanteenParshadRemark.append(str(int(SSCountCutOffGents) - SSCount) + " Short Before Visit")
-                        CanteenParshadStatus = "Not OK"
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
+                elif (df_MergedMasterSheet.at[row[0],'ParshadStatus'] == 'No'):
+                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'Packet'
 
-        if (row.SewadarNewID.find("L") > -1):
-            if (SSCount < int(SSCountCutOffLadies)):
-                try:
-                    CanteenParshadRemark.append(ExceptionMail[row.SewadarNewID,'SS Count'])
-                    if CanteenParshadStatus == "OK":
-                        CanteenParshadStatus = "Tentative"
-                except:
-                    try:
-                        CanteenParshadRemark = [ExceptionMail[row.SewadarNewID,'ALL']]
-                    except:
-                        CanteenParshadRemark.append(str(int(SSCountCutOffLadies) - SSCount) + " Short Before Visit")
-                        CanteenParshadStatus = "Not OK"
+            else:
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:VisitCount'
+                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:VisitCount'
 
-        if InitiationStatus.find("N") > -1:
-            try:
-                CanteenParshadRemark.append(ExceptionMail[row.SewadarNewID,'Initiation'])
-                if CanteenParshadStatus == "OK":
-                    CanteenParshadStatus = "Tentative"
-            except:
-                try:
-                    CanteenParshadRemark = [ExceptionMail[row.SewadarNewID,'ALL']]
-                except:
-                    CanteenParshadRemark.append("Non Initiated")
-                    CanteenParshadStatus = "Not OK"
+    df_MergedMasterSheet.to_excel(os.path.join(request.folder,'private','df_ParshadStatus.xlsx'))
+    df_MergedMasterSheet.to_csv(os.path.join(request.folder,'private','df_ParshadStatus.csv'))
 
-        #This visit criteria for Parshad Packet is that the Sewadar should be present
-        if (CVCount >= int(CVCutOff)) and CanteenParshadStatus == "Not OK":
-            #CanteenParshadRemark = "PARSHAD PACKET"
-            CanteenParshadStatus = "PACKET OK"
-
-        if (SSTentativeParshadStatus == "Not Found") & ((CanteenParshadStatus == "OK") | (CanteenParshadStatus == "Tentative")):
-            CanteenParshadStatus = "Waiting"
-
-        dWorkingParshad.cell(get_column_letter(6 ) + str(row_num)).value = InitiationStatus
-        dWorkingParshad.cell(get_column_letter(7 ) + str(row_num)).value = SSTentativeParshadStatus
-        dWorkingParshad.cell(get_column_letter(8 ) + str(row_num)).value = CanteenParshadStatus
-        if len(CanteenParshadRemark) == 0:
-            dWorkingParshad.cell(get_column_letter(9 ) + str(row_num)).value = "OK"
-        else:
-            dWorkingParshad.cell(get_column_letter(9 ) + str(row_num)).value = "\n".join(CanteenParshadRemark)
-        dWorkingParshad.cell(get_column_letter(10) + str(row_num)).value = SSCountOld
-        dWorkingParshad.cell(get_column_letter(11) + str(row_num)).value = SSCount
-        dWorkingParshad.cell(get_column_letter(12) + str(row_num)).value = CVCountOld
-        dWorkingParshad.cell(get_column_letter(13) + str(row_num)).value = CVCount
-        dWorkingParshad.cell(get_column_letter(14) + str(row_num)).value = MachineBeforeVisitAdditional
-        dWorkingParshad.cell(get_column_letter(15) + str(row_num)).value = SSWWCount
-        dWorkingParshad.cell(get_column_letter(16) + str(row_num)).value = CVD0
-        dWorkingParshad.cell(get_column_letter(17) + str(row_num)).value = CVD1
-        dWorkingParshad.cell(get_column_letter(18) + str(row_num)).value = CVD2
-        dWorkingParshad.cell(get_column_letter(19) + str(row_num)).value = CVD3
-        dWorkingParshad.cell(get_column_letter(20) + str(row_num)).value = CVD4
-        dWorkingParshad.cell(get_column_letter(21) + str(row_num)).value = MachinePreviousVisitAddition
-        dWorkingParshad.cell(get_column_letter(22) + str(row_num)).value = PreviousVisitParshadStatus
-
-
-        row_num = row_num + 1
-
-    print "Almost Done!!"
-    logf.write("Almost done!\n")
-
-    del ParshadList
-    dworkbook.save(dpath)
-    mail.send('softwareattendance@gmail.com',
+    print "Marked visit days and mandatory days attendance"
+    mail.send('acknowledgesynchronization@gmail.com',
         MailSubject,
-        'Tentative Parshad List\n DateSelectedStart=' + str(DateSelectedStart) + '\n DateSelectedEnd=' + str(DateSelectedEnd) + '\n SSCountCutOffLadies=' + str(SSCountCutOffLadies) + '\n SSCountCutOffGents=' + str(SSCountCutOffGents) + '\n VisitCountCutOff=' + str(VisitCountCutOff) + '\n CVCutOff=' + str(CVCutOff) + '\n WWCutOff=' + str(WWCutOff)  + '\n WWWaiver=' + str(WWWaiver) + '\n WWAgeWaiver =' + str(WWAgeWaiver),
-        attachments = mail.Attachment('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/TentativeParshadList.xlsx', content_id='text'))
+        'Tentative Parshad List' + '\n DateSelectedStart=' + str(DateSelectedStart) + '\n DateSelectedEnd=' + str(DateSelectedEnd) + '\n SSCountCutOffLadies=' + str(SSCountCutOffLadies) + '\n SSCountCutOffGents=' + str(SSCountCutOffGents) + '\n MandatoryDaysDateStart=' + str(MandatoryDaysDateStart) + '\n MandatoryDaysDateEnd=' + str(MandatoryDaysDateEnd) + '\n MandatoryDaysCountCutoff=' + str(MandatoryDaysCountCutoff) + '\n VisitCountCutOff=' + str(VisitCountCutOff) + '\n CVCutOff=' + str(CVCutOff) + '\n WWCutOff=' + str(WWCutOff)  + '\n WWWaiver=' + str(WWWaiver) + '\n WWAgeWaiver =' + str(WWAgeWaiver),
+        attachments = mail.Attachment('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/df_ParshadStatus.xlsx', content_id='text'))
+
+    mail.send('acknowledgesynchronization@gmail.com',
+        "SENDING TENTATIVE PARSHAD STATUS",
+        'Tentative Parshad List' + '\n DateSelectedStart=' + str(DateSelectedStart) + '\n DateSelectedEnd=' + str(DateSelectedEnd) + '\n SSCountCutOffLadies=' + str(SSCountCutOffLadies) + '\n SSCountCutOffGents=' + str(SSCountCutOffGents) + '\n MandatoryDaysDateStart=' + str(MandatoryDaysDateStart) + '\n MandatoryDaysDateEnd=' + str(MandatoryDaysDateEnd) + '\n MandatoryDaysCountCutoff=' + str(MandatoryDaysCountCutoff) + '\n VisitCountCutOff=' + str(VisitCountCutOff) + '\n CVCutOff=' + str(CVCutOff) + '\n WWCutOff=' + str(WWCutOff)  + '\n WWWaiver=' + str(WWWaiver) + '\n WWAgeWaiver =' + str(WWAgeWaiver),
+        attachments = mail.Attachment('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/df_ParshadStatus.csv', content_id='text'))
 
     logf.write("Mail sent!\n")
     logf.close()
@@ -1247,7 +609,7 @@ def AttendanceRegisterScheduledAll(DateSelectedStart,DateSelectedEnd):
     #created_table = tables.create()
     #DAttendanceRegisterTable = plugin_powerTable(datasource)
 
-    mail.send('softwareattendance@gmail.com',
+    mail.send('acknowledgesynchronization@gmail.com',
         'All Attendance register',
         'All attendance register',
         attachments = mail.Attachment('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/AttendanceRegister.xlsx', content_id='text'))
@@ -1383,6 +745,7 @@ def AttendanceFetch():
     except:
         logf.write("Unable to open pkl\n")
     AttendanceCount = pd.read_pickle(os.path.join(request.folder,'private',filename))
+    AttendanceCount.drop_duplicates(inplace=True)
     logf.write("read pickle!\n")
     db(db.SSAttendanceCount.id > 0).delete()
 
@@ -1401,6 +764,7 @@ def AttendanceFetch():
     header_map_dict['V2']                  =  'V2'
     header_map_dict['V3']                  =  'V3'
     header_map_dict['V4']                  =  'V4'
+    header_map_dict['Initiated_Status']    =  'Initiated_Status'
     header_map_dict['TotalVisit']          =  'TotalVisit'
     header_map_dict['Total']               =  'Total'
     header_map_dict['areaname']            =  'areaname'
@@ -1501,7 +865,8 @@ def AttendanceFetch():
     if datetime.datetime.now().hour >= 19:
         SSDates = db((db.SSAttendanceDate.DutyDate >= (datetime.datetime.now().replace(hour=19, minute=0, second=0, microsecond=0)))).select().as_list()
     else:
-        SSDates = db((db.SSAttendanceDate.DutyDate >= (datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)))).select().as_list()
+        #SSDates = db((db.SSAttendanceDate.DutyDate >= ((datetime.datetime.now() - datetime.timedelta(days=1)).replace(hour=19, minute=0, second=0, microsecond=0)))).select().as_list()
+        SSDates = db((db.SSAttendanceDate.DutyDate >= ((datetime.datetime.now() - datetime.timedelta(days=0)).replace(hour=0, minute=0, second=0, microsecond=0)))).select().as_list()
 
     #SSDates = db(db.SSAttendanceDate).select().as_list()
     df_dates = pd.DataFrame.from_records(SSDates)
@@ -1516,6 +881,25 @@ def AttendanceFetch():
     pprint.pprint(df_Master,stream=logf)
     df_count = pd.DataFrame.from_records(db(db.SSAttendanceCount).select().as_list())
     df_count.rename(columns={'NewID':'SewadarNewID'},inplace=True)
+    df_SMSReport = df_Master.merge(df_count,on=['SewadarNewID'],how='left')
+    for row in df_SMSReport.iterrows():
+        try:
+            if row[1]['gender'] == "Male":
+                if row[1]['Total'] <= 30:
+                    df_SMSReport.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + ':Dear ' + row[1]['Name'] + ' ji, Attendance short by ' + str(30-row[1]['Total']))
+                else:
+                    df_SMSReport.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + ':Dear ' + row[1]['Name'] + ' ji, Attendance complete')
+            else:
+                if row[1]['Total'] <= 36:
+                    df_SMSReport.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + ':Dear ' + row[1]['Name'] + ' ji, Attendance short by ' + str(36-row[1]['Total']))
+                else:
+                    logf.write('\n---------\n' + str(row[0]))
+                    logf.write('\n---------\n' + str(row[1]))
+                    df_SMSReport.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + ':Dear ' + row[1]['Name'] + ' ji, Attendance complete')
+        except:
+            df_SMSReport.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + 'Attendance short by ' + str(36-row[1]['Total']) + '. Records missing from SewaSamiti. Please contact G.P.Alagh: 8800298700' )
+
+    df_SMSReport.to_csv(os.path.join(request.folder,'private','SendSMS.csv'))
 
     logf.write('Going to join now\n')
     temp_df_daily_report = df_dates.merge(df_Master,on=['SewadarNewID'],how='left')
@@ -1590,7 +974,7 @@ def AttendanceFetch():
     logf.write("Saving xls")
     writer.save()
     logf.write("Saved xls!")
-    
+
     #writer = StyleFrame.ExcelWriter(os.path.join(request.folder,'private',"stylepandas.xlsx"))
     #sf=StyleFrame(df_daily_report)
     #sf.apply_column_style(cols_to_style=df_daily_report.columns, styler_obj=Styler(bg_color=utils.colors.white, bold=True, font=utils.fonts.arial,font_size=8),style_header=True)
@@ -1610,6 +994,44 @@ def AttendanceFetch():
 
 
     return 0
+
+def SMSReport():
+    mail.send('acknowledgesynchronization@gmail.com',
+        'SMSReport',
+        'Success',
+        attachments = [mail.Attachment('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/SendSMS.csv', content_id='excel')])
+    return 0
+
+def SendSMSWarning():
+    import os,time
+    import pandas as pd
+    import numpy as np
+    import pprint
+
+
+    df_MasterSheet = pd.DataFrame.from_records(db(db.MasterSheet.id > 0).select().as_list())
+    df_CountSheet = pd.DataFrame.from_records(db(db.SSAttendanceCount.id > 0).select().as_list())
+    df_CountSheet['SewadarNewID'] = df_CountSheet['NewID'].str.replace('BH0011','')
+    df_MergedMasterSheet = df_MasterSheet.merge(df_CountSheet,on=['SewadarNewID'],how='left')
+    for row in df_MergedMasterSheet.iterrows():
+        if row[1]['gender'] == "Male":
+            if row[1]['Total'] <= 30:
+                df_MergedMasterSheet.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + ':Dear ' + row[1]['Name'] + ' ji, Attendance short by ' + str(30-row[1]['Total']))
+            else:
+                df_MergedMasterSheet.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + ':Dear ' + row[1]['Name'] + ' ji, Attendance complete')
+        else:
+            if row[1]['Total'] <= 36:
+                df_MergedMasterSheet.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + ':Dear ' + row[1]['Name'] + ' ji, Attendance short by ' + str(36-row[1]['Total']))
+            else:
+                df_MergedMasterSheet.set_value(row[0],'MESSAGE','ID:' + row[1]['SewadarNewID'].replace('BH0011','') + ':Dear ' + row[1]['Name'] + ' ji, Attendance complete')
+
+        if not(pd.isnull(df_MergedMasterSheet.at[row[0],'MOBILE'])):
+            sms_url_api = 'http://enterprise.easyserve.me/http-api.php?username=vajoff&password=vajoff@123&senderid=BAJOFF&route=1&number=' + df_MergedMasterSheet.at[row[0],'MOBILE'] + '&message=' + df_MergedMasterSheet.at[row[0],'MESSAGE'];
+            df_MergedMasterSheet.set_value(row[0],'API_URL',sms_url_api)
+
+    df_MergedMasterSheet.to_csv(os.path.join(request.folder,'private','CronSendSMS.csv'))
+    return 0
+
 
 from gluon.scheduler import Scheduler
 scheduler = Scheduler(db2)
