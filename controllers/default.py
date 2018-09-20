@@ -182,9 +182,9 @@ def view_sewadar():
                 WWSchedule = db(db.WWScheduleLadies.Jatha == Jatha).select()
 
 
-        df = pd.read_excel('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/TentativeParshadList.xlsx',sheetname='WorkingParshad',index_col=0)
+        df = pd.read_excel('/home/rootcat/new_web2py/web2py/applications/AttendanceSoftware/private/df_ParshadStatus.xlsx',sheetname='Sheet1',index_col=0)
         try:
-            ParshadStatus = str(df.get_value(SewadarNewID,'CANTEEN Parshad Status'))
+            ParshadStatus = str(df.at[SewadarNewID.replace('BH0011',''),'ParshadStatus'])
         except:
             ParshadStatus = "Not Found"
 
@@ -194,9 +194,9 @@ def view_sewadar():
             ParshadStatus = HTML(BODY(H2(T('NOT OK'),_style="color: red;")))
 
         try:
-            ParshadRemarks = df.get_value(SewadarNewID,'CANTEEN Parshad Remarks').splitlines()
-        except:
-            ParshadRemarks = ["Not Found"]
+            ParshadRemarks = df.at[SewadarNewID.replace('BH0011',''),'ParshadRemark'].split('.')
+        except Exception,e:
+            ParshadRemarks = ["Not Found" + str(e)]
         i = 0
         for each in ParshadRemarks:
             if (ParshadRemarks[i] == "OK") | (ParshadRemarks[i] == "CORE TEAM"):
@@ -205,7 +205,7 @@ def view_sewadar():
                 ParshadRemarks[i] =HTML(BODY(H3(T(ParshadRemarks[i]),_style="color: red;")))
             i = i + 1
 
-    return dict(updation_message=updation_message,TextMessage=TextMessage,form=form,MasterRecords=MasterRecords,MachineRecords=MachineRecords,SewaSamitiDatesRecords=SewaSamitiDatesRecords,SewaSamitiCountRecords=SewaSamitiCountRecords,WWSchedule=WWSchedule,ParshadStatus="TBD",ParshadRemarks="TBD")
+    return dict(updation_message=updation_message,TextMessage=TextMessage,form=form,MasterRecords=MasterRecords,MachineRecords=MachineRecords,SewaSamitiDatesRecords=SewaSamitiDatesRecords,SewaSamitiCountRecords=SewaSamitiCountRecords,WWSchedule=WWSchedule,ParshadStatus=ParshadStatus,ParshadRemarks=ParshadRemarks)
 
 
 @auth.requires(auth.user_id == 3)
@@ -1002,7 +1002,7 @@ def ParshadList():
     message = 'Schedular based'
 
     #form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.today()-datetime.timedelta(days=31)),SQLField('DateEnd','date',default=datetime.datetime.today()),SQLField('LALastLadiesNewGRNO','integer',default=9999),SQLField('LBLastLadiesNewGRNO','integer',default=9999),SQLField('GALastGentsNewGRNO','integer',default=9999),SQLField('GBLastGentsNewGRNO','integer',default=9999),SQLField('LastOSS','integer',default=40000),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=4),SQLField('WWCutOff','integer',default=2),SQLField('DumpMachineAttendance','string',requires=IS_IN_SET(['YES','NO']),default='NO'),SQLField('DumpSSAttendance','string',requires=IS_IN_SET(['YES','NO']),default='NO'),SQLField('CANTEENWISE_REPORT','string',requires=IS_IN_SET(['YES','NO','FLAT']),default='NO'),formname='DateSelect')
-    form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.strptime('13-September-2017 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('DateEnd','date',default=datetime.datetime.strptime('12-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateStart','date',default=datetime.datetime.strptime('05-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateEnd','date',default=datetime.datetime.strptime('09-September-2018 23:59:59','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysCountCutoff','integer',default=3),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=4),SQLField('WWCutOff','integer',default=2),SQLField('WWWaiver','integer',default=60),SQLField('WWAgeWaiver','integer',default=60),SQLField('MailSubject','string',default='Parshad Status'),formname='DateSelect')
+    form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.strptime('13-September-2017 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('DateEnd','date',default=datetime.datetime.strptime('12-September-2018 23:59:59','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateStart','date',default=datetime.datetime.strptime('06-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateEnd','date',default=datetime.datetime.strptime('09-September-2018 23:59:59','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysCountCutoff','integer',default=3),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=0),SQLField('WWCutOff','integer',default=3),SQLField('WWWaiver','integer',default=367),SQLField('WWAgeWaiver','integer',default=65),SQLField('MailSubject','string',default='Parshad Status'),formname='DateSelect')
 
     if form.accepts(request.vars,session,formname='DateSelect'):
         DateSelectedStart = request.vars.DateStart
@@ -2677,6 +2677,8 @@ def download_TemplateExcel():
     import os
     import copy
     import re
+    pathlog = os.path.join(request.folder,'private','log_TemplateExcel')
+    logf = open(pathlog,'w')
 
     hop = int(request.args[1])
 
@@ -2731,21 +2733,24 @@ def download_TemplateExcel():
             for row in xrange(1,dTemplateSheet.get_highest_row()+1):
                 for col in xrange(1,dTemplateSheet.get_highest_column()+1):
                     value = dTemplateSheet[get_column_letter(col)+str(row)].value
+                    logf.write(str(value) + ' = ')
                     try:
                         if p.match(value):
                             #msg = msg + ' ' + value + ' ' + get_column_letter(col) + str(row) + ' = ' + eval(value.replace('{{=','').replace('}}','')) + '\n'
                             try:
                                 dWorkSheetw[get_column_letter(col)+str(row)].value = eval(value.replace('{{=','').replace('}}',''))
+                                logf.write(eval(value.replace('{{=','').replace('}}',''))+'\n')
                                 #print "evaled =" + eval(value.replace('{{=','').replace('}}',''))
                             except:
-                                print "Failed evaluation"
-                                print "evaled =" + eval(value.replace('{{=','').replace('}}',''))
+                                logf.write('\n')
                     except:
-                        pass
+                        logf.write('\n')
+
         i = i + 1
 
 
     dWorkbookr.save(dpathr)
+    logf.close()
     return response.stream(open(dpathr,'rb'), chunk_size=10**6)
 
 
@@ -3538,7 +3543,7 @@ def update_master_from_google_sheets():
     # The ID and range of a sample spreadsheet.
     #SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
     SAMPLE_SPREADSHEET_ID = '18Hm5KEHTsEDBdFFdpVuoWNexjL7ch89BKV-8edpEKiE'
-    SAMPLE_RANGE_NAME = 'MasterSheet!A:G'
+    SAMPLE_RANGE_NAME = 'MasterSheet!A:H'
 
 
     """Shows basic usage of the Sheets API.
@@ -3562,6 +3567,7 @@ def update_master_from_google_sheets():
             Field('CANTEEN','string'),
             Field('DEV_DTY','string'),
             Field('MOBILE','string'),
+            Field('AGE','integer'),
             migrate=True,
             redefine=True,
             format='%(SewadarNewID)s')
@@ -3580,6 +3586,7 @@ def update_master_from_google_sheets():
             row_dict['CANTEEN']=row[1]['Canteen-daily'].upper()
             row_dict['DEV_DTY']=row[1]['New Jatha'].upper()
             row_dict['MOBILE']=row[1]['MOBILE']
+            row_dict['AGE']=row[1]['AGE']
             db.MasterSheet.insert(**row_dict)
 
 

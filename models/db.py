@@ -5,7 +5,7 @@ db.define_table('LocalVariables',
                 Field('LastUpdated','datetime'),
                 migrate=True,
                 redefine=True)
-                
+
 db.define_table('ReportsLocalVariables',
                 Field('Weekday','integer'),
                 Field('Weeknumber','integer'),
@@ -66,6 +66,7 @@ db.define_table('MasterSheet',
                 Field('CANTEEN','string'),
                 Field('DEV_DTY','string'),
                 Field('MOBILE','string'),
+                Field('AGE','integer'),
                 migrate=True,
                 redefine=True,
                 format='%(SewadarNewID)s')
@@ -75,18 +76,15 @@ db.MasterSheet.CANTEEN.requires = IS_NOT_EMPTY()
 db.MasterSheet.DEV_DTY.requires = IS_NOT_EMPTY()
 
 
-db.define_table('MachineAttendance',
-                Field('GRNO','string'),
+db.define_table('ToBeMarked',
                 Field('NewGRNO','string'),
-                Field('DATETIME','datetime'),
-                Field('IO','string'),
+                Field('DATE','integer'),
+                Field('MONTH','integer'),
+                Field('YEAR','integer'),
                 Field('TYPE','string'),
-                primarykey=['NewGRNO','DATETIME'],
                 redefine=True,
                 migrate=True)
 
-
-db.MachineAttendance.DATETIME.requires = IS_DATETIME()
 
 
 db.define_table('AllCardList',

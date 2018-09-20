@@ -267,21 +267,34 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
     df_MergedMasterSheet['Total'].fillna(0,inplace=True)
     df_MergedMasterSheet['TotalVisit'].fillna(0,inplace=True)
     df_MergedMasterSheet['WW_Count'].fillna(0,inplace=True)
+    df_MergedMasterSheet['MANDATORY_COUNT'].fillna(0,inplace=True)
+    df_MergedMasterSheet['AGE'].fillna(0,inplace=True)
     #Start the checks
     df_MergedMasterSheet.loc[:,'ParshadStatus'] = 'OK'
-    df_MergedMasterSheet.loc[:,'ParshadRemark'] = 'OK'
+    #df_MergedMasterSheet.loc[:,'ParshadRemark'] = 'OK'
     for row in df_MergedMasterSheet.iterrows():
         if row[1]['ExceptionField'] == 'ALL':
             df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'OK'
-            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'CO'
+            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'CORE TEAM'
+            #Check mandatory attendance - no exception
+            if not(pd.isnull(row[1]['MANDATORY_COUNT'])):
+                if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
+                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
+                    try:
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
+                    except:
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
+            else:
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:MANDATORY_COUNT'
+                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:MANDATORY_COUNT'
             continue
         #Check initiation
 
         if not(row[1]['ExceptionField'] == 'Initiation'):
-            if row[1]['Initiated_Status'] == 'Y':
+            if not(row[1]['Initiated_Status'] == 'Y'):
                 df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                 try:
-                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Non Initiated"
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Non Initiated"
                 except:
                     df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Non Initiated"
 
@@ -292,9 +305,9 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
                     if int(row[1]['TotalVisit']) < int(VisitCountCutOff):
                         df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                         try:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits Short'
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits Short'
                         except:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits'
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits short'
             except:
                 df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:Status'
                 df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:Status'
@@ -306,7 +319,7 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
                 if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
                     df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                     try:
-                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
                     except:
                         df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
             else:
@@ -316,10 +329,10 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
         if not(row[1]['ExceptionField'] == 'WW Count'):
             if not(pd.isnull(row[1]['gender'])):
                 if row[1]['gender'].upper() == "MALE":
-                    if int(row[1]['WW_Count']) < int(WWCutOff):
+                    if ((int(row[1]['WW_Count']) < int(WWCutOff)) and (int(row[1]['AGE']) <= int(WWAgeWaiver)) and (int(row[1]['Total']) <= int(WWWaiver))):
                         df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                         try:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "WW Short by " + str(int(WWCutOff) - int(row[1]['WW_Count']))
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "WW Short by " + str(int(WWCutOff) - int(row[1]['WW_Count']))
                         except:
                             df_MergedMasterSheet.at[row[0],'ParshadRemark'] = " WW Short by " + str(int(WWCutOff) - int(row[1]['WW_Count']))
             else:
@@ -333,14 +346,14 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
                     if int(row[1]['Total']) < int(SSCountCutOffGents):
                         df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                         try:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Before Visit Attendance Short by " + str(int(SSCountCutOffGents) - int(row[1]['Total']))
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Before Visit Attendance Short by " + str(int(SSCountCutOffGents) - int(row[1]['Total']))
                         except:
                             df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Before Visit Attendance Short by " + str(int(SSCountCutOffGents) - int(row[1]['Total']))
                 else:
                     if int(row[1]['Total']) < int(SSCountCutOffLadies):
                         df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                         try:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Before Visit Attendance Short by " + str(int(SSCountCutOffLadies) - int(row[1]['Total']))
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Before Visit Attendance Short by " + str(int(SSCountCutOffLadies) - int(row[1]['Total']))
                         except:
                             df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Before Visit Attendance Short by " + str(int(SSCountCutOffLadies) - int(row[1]['Total']))
 
@@ -354,16 +367,18 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
                 if int(row[1]['VISIT_COUNT']) < int(CVCutOff):
                     df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
                     try:
-                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '\n' + "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
                     except:
                         df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
                 elif (df_MergedMasterSheet.at[row[0],'ParshadStatus'] == 'No'):
-                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'Packet'
+                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'Not Ok'
 
             else:
                 df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:VisitCount'
                 df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:VisitCount'
 
+    df_MergedMasterSheet['ParshadRemark'].fillna('OK',inplace=True)
+    df_MergedMasterSheet.loc[:,'SMS'] = "Dear " + df_MergedMasterSheet.loc[:,'Name_x'] + " ji,PreVisit PARSHAD " + df_MergedMasterSheet.loc[:,'ParshadStatus'] + ".Remark " + df_MergedMasterSheet.loc[:,'ParshadRemark']
     df_MergedMasterSheet.to_excel(os.path.join(request.folder,'private','df_ParshadStatus.xlsx'))
     df_MergedMasterSheet.to_csv(os.path.join(request.folder,'private','df_ParshadStatus.csv'))
 
