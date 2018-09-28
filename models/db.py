@@ -116,12 +116,12 @@ db.define_table('PreviousParshadList',
 #Clear every visit
 db.define_table('ParshadMailException',
                 Field('SewadarNewID','string'),
-                Field('ExceptionField','string'),
+                Field('ExceptionField','list:string'),
                 Field('Status','string'),
                 redefine=True,
                 migrate=True)
 
-db.ParshadMailException.ExceptionField.requires = IS_IN_SET(['ALL','SS Count','WW Count','Current Visit','Visits Count','Initiation','Mandatory Days'])
+#db.ParshadMailException.ExceptionField.requires = IS_IN_SET([('ALL','Mandatory Days'),'SS Count','WW Count','Current Visit','Visits Count','Initiation','Mandatory Days'])
 
 db.define_table('SSTentativeParshadList',
                 Field('SewadarNewID','string'),

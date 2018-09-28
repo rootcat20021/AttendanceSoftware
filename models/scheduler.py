@@ -67,12 +67,8 @@ def uploaddata_SSAttendance():
 
        row_dict = {}
        row_dict['SewadarNewID'] = row[1]['SewadarNewID']
-       if type(row[1]['DutyDateTime']) == unicode:
-           row_dict['DutyDate'] = datetime.datetime.strptime(row[1]['DutyDateTime'],'%d/%m/%Y %H:%M:%S')
-           logf.write("unicode=")
-       else:
-           row_dict['DutyDate'] = row[1]['DutyDateTime'].replace(day=row[1]['DutyDateTime'].month,month=row[1]['DutyDateTime'].day)
-           logf.write("datetime=")
+       #row_dict['DutyDate'] = datetime.datetime.strptime(row[1]['DutyDateTime'],'%d/%m/%Y %H:%M:%S')
+       row_dict['DutyDate'] = row[1]['DutyDateTime']
 
        logf.write(datetime.datetime.strftime(row_dict['DutyDate'],'%d-%b-%Y') + '  ')
        logf.write("Diff = " + str(row_dict['DutyDate'].replace(hour=0, minute=0, second=0, microsecond=0) - row[1]['DutyDate'].replace(hour=0, minute=0, second=0, microsecond=0)) + '\n')
@@ -106,12 +102,12 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
     import pandas as pd
     import pprint
     CURRENT_VISIT_START = {}
-    CURRENT_VISIT_START[0] = datetime.datetime.strptime('26-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
-    CURRENT_VISIT_START[1] = datetime.datetime.strptime('27-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
-    CURRENT_VISIT_START[2] = datetime.datetime.strptime('28-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
-    CURRENT_VISIT_START[3] = datetime.datetime.strptime('29-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
-    CURRENT_VISIT_START[4] = datetime.datetime.strptime('30-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
-    CURRENT_VISIT_START['COUNT'] = 5
+    CURRENT_VISIT_START[0] = datetime.datetime.strptime('21-November-2018 00:00:00','%d-%B-%Y %H:%M:%S')
+    CURRENT_VISIT_START[1] = datetime.datetime.strptime('22-November-2018 23:59:59','%d-%B-%Y %H:%M:%S')
+    CURRENT_VISIT_START[2] = datetime.datetime.strptime('23-November-2018 23:59:59','%d-%B-%Y %H:%M:%S')
+    #CURRENT_VISIT_START[3] = datetime.datetime.strptime('22-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')
+    #CURRENT_VISIT_START[4] = datetime.datetime.strptime('23-September-2018 12:00:00','%d-%B-%Y %H:%M:%S')
+    CURRENT_VISIT_START['COUNT'] = 5 - 2
 
     pathlog = os.path.join(request.folder,'private','log_ParshadListScheduled')
     logf = open(pathlog,'w')
@@ -121,16 +117,52 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
     df_MasterSheet = pd.DataFrame.from_records(db(db.MasterSheet.id > 0).select().as_list())
     df_MasterSheet.to_excel(os.path.join(request.folder,'private','df_MasterSheet.xlsx'))
     df_CountSheet = pd.DataFrame.from_records(db(db.SSAttendanceCount.id > 0).select().as_list())
-    df_CountSheet.drop(columns=['w','B','V1','V2','V3','V4','Father_Husband_Name'],inplace=True)
+
     df_CountSheet['SewadarNewID'] = df_CountSheet['NewID'].str.replace('BH0011','')
+    df_DateSheet_WW_pivot = df_CountSheet[['SewadarNewID','w']].rename(columns={0:'w'}).set_index('SewadarNewID')
+    df_DateSheet_WW_pivot.rename(columns={'w':'WW_Count'},inplace=True)
+    df_DateSheet_WW_pivot.loc[:,'WW_Count'] = df_DateSheet_WW_pivot.WW_Count/2
+    df_DateSheet_WW_pivot.to_excel(os.path.join(request.folder,'private','df_dates_WW_pivot.xlsx'))
+
+    df_CountSheet.drop(columns=['w','B','V1','V2','V3','V4','Father_Husband_Name'],inplace=True)
     df_CountSheet = df_CountSheet.set_index(['SewadarNewID'])
     df_CountSheet.drop(columns=['id','areaname','OldSewadarid'],inplace=True)
     df_CountSheet.drop_duplicates(inplace=True)
+    df_CountSheet.loc[:,'ExtraDays'] = 0
+
+    df_ToBeMarked = pd.DataFrame.from_records(db(db.ToBeMarked.id > 0).select().as_list())
+
+    for row in df_ToBeMarked.iterrows():
+        logf.write("Tryign to check extra attendance for " + str(row[1]['NewGRNO']) + "\n")
+        df_SSDatesExtraDay = []
+        df_SSDatesExtraDay = pd.DataFrame.from_records(db((db.SSAttendanceDate.SewadarNewID == ("BH0011" + row[1]['NewGRNO'])) & (db.SSAttendanceDate.DutyDate <= datetime.datetime(row[1]['YEAR'],row[1]['MONTH'],row[1]['DATE'],23,59,59)) & (db.SSAttendanceDate.DutyDate >= datetime.datetime(row[1]['YEAR'],row[1]['MONTH'],row[1]['DATE'],0,0,0))).select().as_list())
+        if len(df_SSDatesExtraDay.index) == 0:
+            df_CountSheet.at[row[1]['NewGRNO'],'ExtraDays'] = df_CountSheet.at[row[1]['NewGRNO'],'ExtraDays'] + 1
+            logf.write(row[1]['NewGRNO'] + ' Found one extra\n')
+            logf.write("Extra = " + str(df_CountSheet.at[row[1]['NewGRNO'],'ExtraDays']))
+
     df_CountSheet.to_excel(os.path.join(request.folder,'private','df_CountSheet.xlsx'))
 
-    df_DateSheet_visit_days = pd.DataFrame.from_records(db((db.SSAttendanceDate.DutyDate >= CURRENT_VISIT_START[0]) & (db.SSAttendanceDate.DutyDate <= CURRENT_VISIT_START[CURRENT_VISIT_START['COUNT']-1])).select().as_list())
-    df_DateSheet_visit_days.reset_index(level=0,inplace=True)
-    df_DateSheet_visit_days.to_excel(os.path.join(request.folder,'private','df_visit_days.xlsx'))
+
+
+    
+
+    df_DateSheet_visit_days_pre = pd.DataFrame.from_records(db((db.SSAttendanceDate.DutyDate >= CURRENT_VISIT_START[0]) & (db.SSAttendanceDate.DutyDate <= CURRENT_VISIT_START[CURRENT_VISIT_START['COUNT']-1])).select().as_list())
+    df_DateSheet_visit_days_pre.reset_index(level=0,inplace=True)
+    df_DateSheet_visit_days_pre['SewadarNewID'] = df_DateSheet_visit_days_pre['SewadarNewID'].str.replace('BH0011','')
+    df_DateSheet_visit_days_pre.to_excel(os.path.join(request.folder,'private','df_visit_days.xlsx'))
+
+    #Same date different times need to be uniquified
+    dict_DateSheet = {}
+    df_DateSheet_visit_days = pd.DataFrame(columns=['SewadarNewID','DutyDate','Duty_Type'])
+    for row in df_DateSheet_visit_days_pre.iterrows():
+        if dict_DateSheet.get((row[1]['SewadarNewID'],row[1]['DutyDate'].replace(hour=7, minute=0, second=0, microsecond=0)),0) == 0:
+            df_DateSheet_visit_days.at[row[0],'SewadarNewID'] = row[1]['SewadarNewID']
+            df_DateSheet_visit_days.at[row[0],'Duty_Type'] = row[1]['Duty_Type']
+            df_DateSheet_visit_days.at[row[0],'DutyDate'] = row[1]['DutyDate'].replace(hour=7, minute=0, second=0, microsecond=0)
+            dict_DateSheet[(row[1]['SewadarNewID'],row[1]['DutyDate'].replace(hour=7, minute=0, second=0, microsecond=0))] = 1
+
+    df_DateSheet_visit_days.reset_index(inplace=True)
 
     df_DateSheet_visit_pivot = ""
     try:
@@ -184,25 +216,23 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
 
     df_DateSheet_visit_pivot.to_excel(os.path.join(request.folder,'private','df_visit_days_pivot.xlsx'))
 
-    df_DateSheet_WW  = pd.DataFrame.from_records(db((db.SSAttendanceDate.DutyDate >= (datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d %H:%M:%S').replace(day=1,month=1,hour=0, minute=0, second=0, microsecond=0))) & (db.SSAttendanceDate.DutyDate <= (datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d %H:%M:%S').replace(hour=23, minute=59, second=59, microsecond=999))) & (db.SSAttendanceDate.Duty_Type == 'W')).select().as_list())
-    df_DateSheet_WW['SewadarNewID'] = df_DateSheet_WW['SewadarNewID'].str.replace('BH0011','')
-    df_DateSheet_WW_pivot = pd.pivot_table(df_DateSheet_WW,index=['SewadarNewID'],columns=['Duty_Type'],aggfunc='count',margins=False,fill_value=0)
-    df_DateSheet_WW_pivot = df_DateSheet_WW_pivot.xs('DutyDate', axis=1, drop_level=True)
-    try:
-        df_DateSheet_WW_pivot.drop(columns='D',inplace=True)
-    except:
-        pass
-    try:
-        df_DateSheet_WW_pivot.drop(columns='B',inplace=True)
-    except:
-        pass
-    try:
-        df_DateSheet_WW_pivot.drop(columns='V',inplace=True)
-    except:
-        pass
+    #df_DateSheet_WW  = pd.DataFrame.from_records(db((db.SSAttendanceDate.DutyDate >= (datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d %H:%M:%S').replace(day=1,month=1,hour=0, minute=0, second=0, microsecond=0))) & (db.SSAttendanceDate.DutyDate <= (datetime.datetime.strptime(DateSelectedEnd,'%Y-%m-%d %H:%M:%S').replace(hour=23, minute=59, second=59, microsecond=999))) & (db.SSAttendanceDate.Duty_Type == 'W')).select().as_list())
+    #df_DateSheet_WW['SewadarNewID'] = df_DateSheet_WW['SewadarNewID'].str.replace('BH0011','')
+    #df_DateSheet_WW_pivot = pd.pivot_table(df_DateSheet_WW,index=['SewadarNewID'],columns=['Duty_Type'],aggfunc='count',margins=False,fill_value=0)
+    #df_DateSheet_WW_pivot = df_DateSheet_WW_pivot.xs('DutyDate', axis=1, drop_level=True)
+    #try:
+    #    df_DateSheet_WW_pivot.drop(columns='D',inplace=True)
+    #except:
+    #    pass
+    #try:
+    #    df_DateSheet_WW_pivot.drop(columns='B',inplace=True)
+    #except:
+    #    pass
+    #try:
+    #    df_DateSheet_WW_pivot.drop(columns='V',inplace=True)
+    #except:
+    #    pass
 
-    df_DateSheet_WW_pivot.rename(columns={'W':'WW_Count'},inplace=True)
-    df_DateSheet_WW_pivot.to_excel(os.path.join(request.folder,'private','df_dates_WW_pivot.xlsx'))
 
     df_DateSheet_mandatory_days = pd.DataFrame.from_records(db((db.SSAttendanceDate.DutyDate >= (datetime.datetime.strptime(MandatoryDaysDateStart,'%Y-%m-%d %H:%M:%S'))) & (db.SSAttendanceDate.DutyDate <= (datetime.datetime.strptime(MandatoryDaysDateEnd,'%Y-%m-%d %H:%M:%S')))).select().as_list())
     df_DateSheet_mandatory_days['SewadarNewID'] = df_DateSheet_mandatory_days['SewadarNewID'].str.replace('BH0011','')
@@ -249,6 +279,7 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
     #Keywords for exception
     #ALL , Visits Count,Current Visit
     df_ExceptionMail = pd.DataFrame.from_records(db(db.ParshadMailException).select().as_list())
+    df_ExceptionMail.to_excel(os.path.join(request.folder,'private','df_ExceptionMail.xlsx'))
     df_MergedMasterSheet = df_MergedMasterSheet.merge(df_ExceptionMail,on=['SewadarNewID'],how='left')
     df_SSTentativeParshadList = pd.DataFrame.from_records(db(db.SSTentativeParshadList.id > 0).select().as_list())
     df_MergedMasterSheet = df_MergedMasterSheet.merge(df_SSTentativeParshadList,on=['SewadarNewID'],how='left')
@@ -260,6 +291,7 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
     for row in df_DateSheet_visit_days.iterrows():
         df_MergedMasterSheet.at[row[1]['SewadarNewID'],row[1]['DutyDate'].replace(hour=0, minute=0, second=0, microsecond=0)] = 'P'
 
+    df_MergedMasterSheet.to_excel(os.path.join(request.folder,'private','df_before_mandatory_input.xlsx'))
     for row in df_DateSheet_mandatory_days.iterrows():
         df_MergedMasterSheet.at[row[1]['SewadarNewID'],row[1]['DutyDate'].replace(hour=0, minute=0, second=0, microsecond=0)] = 'M'
 
@@ -267,118 +299,160 @@ def ParshadListScheduled(DateSelectedStart,DateSelectedEnd,MandatoryDaysDateStar
     df_MergedMasterSheet['Total'].fillna(0,inplace=True)
     df_MergedMasterSheet['TotalVisit'].fillna(0,inplace=True)
     df_MergedMasterSheet['WW_Count'].fillna(0,inplace=True)
+    df_MergedMasterSheet['VISIT_COUNT'].fillna(0,inplace=True)
     df_MergedMasterSheet['MANDATORY_COUNT'].fillna(0,inplace=True)
+    df_MergedMasterSheet['ExtraDays'].fillna(0,inplace=True)
     df_MergedMasterSheet['AGE'].fillna(0,inplace=True)
+    df_MergedMasterSheet['gender'].fillna("NOTKNOWN",inplace=True)
+    df_MergedMasterSheet.loc[:,'BeforeVisitShort'] = 0
+    df_MergedMasterSheet.loc[:,'WWShort'] = 0
+    df_MergedMasterSheet.loc[:,'MissiShort'] = 0
     #Start the checks
     df_MergedMasterSheet.loc[:,'ParshadStatus'] = 'OK'
-    #df_MergedMasterSheet.loc[:,'ParshadRemark'] = 'OK'
-    for row in df_MergedMasterSheet.iterrows():
-        if row[1]['ExceptionField'] == 'ALL':
-            df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'OK'
-            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'CORE TEAM'
-            #Check mandatory attendance - no exception
-            if not(pd.isnull(row[1]['MANDATORY_COUNT'])):
-                if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
-                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
-                    try:
-                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
-                    except:
-                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
-            else:
-                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:MANDATORY_COUNT'
-                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:MANDATORY_COUNT'
-            continue
-        #Check initiation
+    df_MergedMasterSheet.loc[:,'PacketStatus'] = 'OK'
+    df_MergedMasterSheet.loc[:,'ParshadRemark'] = ''
+    logf.write("Begin checking\n")
+    isnull = df_MergedMasterSheet.ExceptionField.isnull()
 
-        if not(row[1]['ExceptionField'] == 'Initiation'):
-            if not(row[1]['Initiated_Status'] == 'Y'):
-                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
-                try:
-                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Non Initiated"
-                except:
-                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Non Initiated"
+    df_MergedMasterSheet.loc[isnull, 'ExceptionField'] = [ [[]] * isnull.sum() ]
+    #for row in df_MergedMasterSheet.iterrows():
+    #    try:
+    #        if (pd.isnull(row[1]['ExceptionField'])):
+    #            df_MergedMasterSheet.loc[[row[0]],'ExceptionField'] = [['Noo Exception']]
+    #    except:
+    #        df_MergedMasterSheet.loc[[row[0]],'ExceptionField'] = [['No Exception']]
+    #    
+    df_MergedMasterSheet.to_excel(os.path.join(request.folder,'private','df_ExceptionFilled.xlsx'))
+
+    for row in df_MergedMasterSheet.iterrows():
+        logf.write(str(row[0])+'\n')
+
+        if 'ALL' in row[1]['ExceptionField']:
+            df_MergedMasterSheet.at[row[0],'PacketStatus'] = ''
+            #Check mandatory attendance - no exception
+            if not('Mandatory Days' in row[1]['ExceptionField']):
+                if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
+                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'NOT OK'
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
+            else:
+                if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Jathedar Missi Roti Exemption"
+            continue
+
+        #Check initiation
+        if not(row[1]['Initiated_Status'] == 'Y'):
+            df_MergedMasterSheet.at[row[0],'ParshadStatus'] = ''
+            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Non Initiated"
+            if int(row[1]['VISIT_COUNT']) < int(CVCutOff):
+                df_MergedMasterSheet.at[row[0],'PacketStatus'] = "NOT OK"
+                if int(row[1]['VISIT_COUNT']) == 0:
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Current Visit Absent"
+                else:
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] = df_MergedMasterSheet.at[row[0],'ParshadRemark'] + ".Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
+            continue
 
         #Check 9 visit
-        if not(row[1]['ExceptionField'] == 'Visits Count'):
-            try:
-                if row[1]['status'].upper() != 'PERMANENT':
-                    if int(row[1]['TotalVisit']) < int(VisitCountCutOff):
-                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
-                        try:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits Short'
-                        except:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits short'
-            except:
-                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:Status'
-                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:Status'
+        if not('Visits Count' in row[1]['ExceptionField']):
+            if row[1]['status'].upper() != 'PERMANENT':
+                if int(row[1]['TotalVisit']) < int(VisitCountCutOff):
+                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = ''
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] = str(int(VisitCountCutOff) - int(df_MergedMasterSheet.at[row[0],'TotalVisit'])) + ' Visits short'
+                    if int(row[1]['VISIT_COUNT']) < int(CVCutOff):
+                        df_MergedMasterSheet.at[row[0],'PacketStatus'] = 'NOT OK'
+                        if int(row[1]['VISIT_COUNT']) == 0:
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Current Visit Absent"
+                        else:
+                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
+                    continue
+        else:
+            #Correction case so no additional status required
+            pass
 
 
+        #Below Sewadars are eligible for Parshad , hence cant have packet
+        df_MergedMasterSheet.at[row[0],'PacketStatus'] = ''
         #Check mandatory attendance
-        if not(row[1]['ExceptionField'] == 'Mandatory Days'):
-            if not(pd.isnull(row[1]['MANDATORY_COUNT'])):
-                if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
-                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
-                    try:
-                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
-                    except:
-                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
-            else:
-                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:MANDATORY_COUNT'
-                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:MANDATORY_COUNT'
+        if not('Mandatory Days' in row[1]['ExceptionField']):
+            if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
+                df_MergedMasterSheet.at[row[0],'MissiShort'] = int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT'])
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'NOT OK'
+                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Missi Roti Attendance Short by " + str(int(MandatoryDaysCountCutoff) - int(row[1]['MANDATORY_COUNT']))
+        else:
+            if int(row[1]['MANDATORY_COUNT']) < int(MandatoryDaysCountCutoff):
+                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Jathedar Missi Roti Exemption"
+
         #Check WW
-        if not(row[1]['ExceptionField'] == 'WW Count'):
-            if not(pd.isnull(row[1]['gender'])):
-                if row[1]['gender'].upper() == "MALE":
-                    if ((int(row[1]['WW_Count']) < int(WWCutOff)) and (int(row[1]['AGE']) <= int(WWAgeWaiver)) and (int(row[1]['Total']) <= int(WWWaiver))):
-                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
-                        try:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "WW Short by " + str(int(WWCutOff) - int(row[1]['WW_Count']))
-                        except:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = " WW Short by " + str(int(WWCutOff) - int(row[1]['WW_Count']))
-            else:
-                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:WW'
-                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:WW'
-
-        #Check Before visit
-        if not(row[1]['ExceptionField'] == 'SS Count'):
-            if not(pd.isnull(row[1]['gender'])):
-                if row[1]['gender'].upper() == "MALE":
-                    if int(row[1]['Total']) < int(SSCountCutOffGents):
-                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
-                        try:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Before Visit Attendance Short by " + str(int(SSCountCutOffGents) - int(row[1]['Total']))
-                        except:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Before Visit Attendance Short by " + str(int(SSCountCutOffGents) - int(row[1]['Total']))
-                else:
-                    if int(row[1]['Total']) < int(SSCountCutOffLadies):
-                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
-                        try:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Before Visit Attendance Short by " + str(int(SSCountCutOffLadies) - int(row[1]['Total']))
-                        except:
-                            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Before Visit Attendance Short by " + str(int(SSCountCutOffLadies) - int(row[1]['Total']))
-
-            else:
-                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:Total'
-                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:Total'
+        if not('WW Count' in row[1]['ExceptionField']):
+            if row[1]['gender'].upper() == "MALE":
+                if ((int(row[1]['WW_Count']) < int(WWCutOff)) and (int(row[1]['AGE']) <= int(WWAgeWaiver)) and (int(row[1]['Total']) <= int(WWWaiver))):
+                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'NOT OK'
+                    df_MergedMasterSheet.at[row[0],'WWShort'] = int(WWCutOff) - int(row[1]['WW_Count'])
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "WW Short by " + str(int(WWCutOff) - int(row[1]['WW_Count']))
+        else:
+            if row[1]['gender'].upper() == "MALE":
+                if ((int(row[1]['WW_Count']) < int(WWCutOff)) and (int(row[1]['AGE']) <= int(WWAgeWaiver)) and (int(row[1]['Total']) <= int(WWWaiver))):
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Jathedar WW Exemption"
 
         #Check visit attendance
-        if not(row[1]['ExceptionField'] == 'Current Visit'):
-            if not(pd.isnull(row[1]['VISIT_COUNT'])):
-                if int(row[1]['VISIT_COUNT']) < int(CVCutOff):
-                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'No'
-                    try:
-                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
-                    except:
-                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] = "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
-                elif (df_MergedMasterSheet.at[row[0],'ParshadStatus'] == 'No'):
-                    df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'Not Ok'
+        if not('Current Visit' in row[1]['ExceptionField']):
+            if int(row[1]['VISIT_COUNT']) < int(CVCutOff):
+                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'NOT OK'
+                if int(row[1]['VISIT_COUNT']) == 0:
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Current Visit Absent"
+                else:
+                    df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Current Visit Short by " + str(int(CVCutOff) - int(row[1]['VISIT_COUNT']))
+        else:
+            #No special remark is needed ..get Attendance corrected in SS
+            pass
 
+        #Check Before visit
+        if not('SS Count' in row[1]['ExceptionField']):
+            if row[1]['gender'].upper() == "MALE":
+                if int(row[1]['Total']) < int(SSCountCutOffGents):
+                    if int(row[1]['ExtraDays']) + int(row[1]['Total']) < int(SSCountCutOffGents):
+                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'NOT OK'
+                        df_MergedMasterSheet.at[row[0],'BeforeVisitShort'] = int(SSCountCutOffGents) - int(row[1]['Total']) - int(row[1]['ExtraDays'])
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Before Visit Attendance Short by " + str(int(SSCountCutOffGents) - int(row[1]['Total']))
+                    else:
+                        if df_MergedMasterSheet.at[row[0],'ParshadStatus'] == 'NOT OK':
+                            pass
+                        else:
+                            df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'Tentative'
             else:
-                df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'MissingEntry:VisitCount'
-                df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'MissingEntry:VisitCount'
+                if int(row[1]['Total']) < int(SSCountCutOffLadies):
+                    if int(row[1]['ExtraDays']) + int(row[1]['Total']) < int(SSCountCutOffLadies):
+                        df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'NOT OK'
+                        df_MergedMasterSheet.at[row[0],'BeforeVisitShort'] = int(SSCountCutOffLadies) - int(row[1]['Total']) - int(row[1]['ExtraDays'])
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Before Visit Attendance Short by " + str(int(SSCountCutOffLadies) - int(row[1]['Total']))
+                    else:
+                        if df_MergedMasterSheet.at[row[0],'ParshadStatus'] == 'NOT OK':
+                            pass
+                        else:
+                            df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'Tentative'
+        else:
+            if row[1]['gender'].upper() == "MALE":
+                if int(row[1]['Total']) < int(SSCountCutOffGents):
+                    if int(row[1]['ExtraDays']) + int(row[1]['Total']) < int(SSCountCutOffGents):
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Jathedar Before Visit Exemption"
+            else:
+                if int(row[1]['Total']) < int(SSCountCutOffLadies):
+                    if int(row[1]['ExtraDays']) + int(row[1]['Total']) < int(SSCountCutOffLadies):
+                        df_MergedMasterSheet.at[row[0],'ParshadRemark'] =  df_MergedMasterSheet.at[row[0],'ParshadRemark'] + '.' + "Jathedar Before Visit Exemption"
+
+        if ('Packet' in row[1]['ExceptionField']):
+            df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'Packet'
+            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = row[1]['Status']
+
+
+        if ('LAST SHEET1' in row[1]['ExceptionField']):
+            df_MergedMasterSheet.at[row[0],'ParshadStatus'] = 'NOT OK'
+            df_MergedMasterSheet.at[row[0],'ParshadRemark'] = 'NO'
+
+
+    logf.write("Ended checking \n")
 
     df_MergedMasterSheet['ParshadRemark'].fillna('OK',inplace=True)
-    df_MergedMasterSheet.loc[:,'SMS'] = "Dear " + df_MergedMasterSheet.loc[:,'Name_x'] + " ji,PreVisit PARSHAD " + df_MergedMasterSheet.loc[:,'ParshadStatus'] + ".Remark " + df_MergedMasterSheet.loc[:,'ParshadRemark']
+    df_MergedMasterSheet.loc[:,'SMS'] = "Dear " + df_MergedMasterSheet.loc[:,'Name'] + " ji,PreVisit PARSHAD " + df_MergedMasterSheet.loc[:,'ParshadStatus'] + ".Remark " + df_MergedMasterSheet.loc[:,'ParshadRemark']
     df_MergedMasterSheet.to_excel(os.path.join(request.folder,'private','df_ParshadStatus.xlsx'))
     df_MergedMasterSheet.to_csv(os.path.join(request.folder,'private','df_ParshadStatus.csv'))
 

@@ -191,7 +191,7 @@ def view_sewadar():
         if (ParshadStatus == "Waiting") or (ParshadStatus == "OK"):
             ParshadStatus = HTML(BODY(H2(T('OK'),_style="color: green;")))
         else:
-            ParshadStatus = HTML(BODY(H2(T('NOT OK'),_style="color: red;")))
+            ParshadStatus = HTML(BODY(H2(T(ParshadStatus),_style="color: red;")))
 
         try:
             ParshadRemarks = df.at[SewadarNewID.replace('BH0011',''),'ParshadRemark'].split('.')
@@ -911,10 +911,10 @@ def uploaddata_SSAttendanceCount():
 
 
     #my headers are the headers in DB
-    myheaders = ['NewID','OldSewadarid','Name','Father_Husband_Name','status','gender','B','w','V1','V2','V3','V4','TotalVisit','Total','areaname']
+    myheaders = ['NewID','OldSewadarid','Name','Father_Husband_Name','status','gender','B','w','V1','V2','V3','V4','Initiated_Status','TotalVisit','Total','areaname']
 
     #headers are the name used in XLS
-    headers = ['NewID','OldSewadarid','Name','Father_Husband_Name','status','Gender','B','w','V1','V2','V3','V4','TotalVisit','Total','areaname']
+    headers = ['NewID','OldSewadarid','Name','Father_Husband_Name','status','Gender','B','w','V1','V2','V3','V4','Initiated_Status','TotalVisit','Total','areaname']
     header_cells_in_xls = [worksheet.cell_value(0,idx) for idx in range(worksheet.ncols)]
 
 
@@ -964,11 +964,11 @@ def uploaddata_SSAttendanceCount():
                else:
                    raise ValueError('Gender not in required format')
 
-           if myheaders[i].upper() == 'STATUS':
-               if ((value.upper() == 'ELDERLY') |(value.upper() == 'RETIRED') | (value.upper() == 'PERMANENT') | (value == 'permanent') | (value == 'PERMANENT')):
-                   value = 'Permanent'
-               else:
-                   value = 'Slip'
+           #if myheaders[i].upper() == 'STATUS':
+           #    if ((value.upper() == 'ELDERLY') |(value.upper() == 'RETIRED') | (value.upper() == 'PERMANENT') | (value == 'permanent') | (value == 'PERMANENT')):
+           #        value = 'Permanent'
+           #    else:
+           #        value = 'Slip'
 
            if i<=1:
                value = re.sub("\s*","",value)
@@ -1002,7 +1002,7 @@ def ParshadList():
     message = 'Schedular based'
 
     #form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.today()-datetime.timedelta(days=31)),SQLField('DateEnd','date',default=datetime.datetime.today()),SQLField('LALastLadiesNewGRNO','integer',default=9999),SQLField('LBLastLadiesNewGRNO','integer',default=9999),SQLField('GALastGentsNewGRNO','integer',default=9999),SQLField('GBLastGentsNewGRNO','integer',default=9999),SQLField('LastOSS','integer',default=40000),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=4),SQLField('WWCutOff','integer',default=2),SQLField('DumpMachineAttendance','string',requires=IS_IN_SET(['YES','NO']),default='NO'),SQLField('DumpSSAttendance','string',requires=IS_IN_SET(['YES','NO']),default='NO'),SQLField('CANTEENWISE_REPORT','string',requires=IS_IN_SET(['YES','NO','FLAT']),default='NO'),formname='DateSelect')
-    form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.strptime('13-September-2017 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('DateEnd','date',default=datetime.datetime.strptime('12-September-2018 23:59:59','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateStart','date',default=datetime.datetime.strptime('06-September-2018 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateEnd','date',default=datetime.datetime.strptime('09-September-2018 23:59:59','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysCountCutoff','integer',default=3),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=0),SQLField('WWCutOff','integer',default=3),SQLField('WWWaiver','integer',default=367),SQLField('WWAgeWaiver','integer',default=65),SQLField('MailSubject','string',default='Parshad Status'),formname='DateSelect')
+    form=form_factory(SQLField('DAY_END_TIME','string',default=19,requires=IS_IN_SET(range(0,25,1))),SQLField('DateStart','date',default=datetime.datetime.strptime('15-November-2017 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('DateEnd','date',default=datetime.datetime.strptime('14-November-2018 23:59:59','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateStart','date',default=datetime.datetime.strptime('08-November-2018 00:00:00','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysDateEnd','date',default=datetime.datetime.strptime('11-November-2018 23:59:59','%d-%B-%Y %H:%M:%S')),SQLField('MandatoryDaysCountCutoff','integer',default=0),SQLField('SSCountCutOffLadies','integer',default=36),SQLField('SSCountCutOffGents','integer',default=30),SQLField('VisitCountCutOff','integer',default=9),SQLField('CVCutOff','integer',default=0),SQLField('WWCutOff','integer',default=4),SQLField('WWWaiver','integer',default=367),SQLField('WWAgeWaiver','integer',default=65),SQLField('MailSubject','string',default='Parshad Status'),formname='DateSelect')
 
     if form.accepts(request.vars,session,formname='DateSelect'):
         DateSelectedStart = request.vars.DateStart
@@ -2888,7 +2888,8 @@ def download_SplitExcel():
         dWorkSheet['A' + str(max_header_row)].value = "Total Summary: "
         for t_col in TotalColumn:
             for vt_col in IndexSheet[index,t_col,'TotalColumnList']:
-                dWorkSheet['A' + str(max_header_row)].value = str(dWorkSheet['A' + str(max_header_row)].value) + str(vt_col) + ":" + str(IndexSheet[index,(t_col,vt_col),'TotalColumn']) + "   "
+                dWorkSheet['A' + str(max_header_row)].value = str(dWorkSheet['A' + str(max_header_row)].value) + str(t_col) + '@' + str(vt_col) + ":" + str(IndexSheet[index,(t_col,vt_col),'TotalColumn']) + "   "
+            dWorkSheet['A' + str(max_header_row)].value = str(dWorkSheet['A' + str(max_header_row)].value) + '@ '
 
         logf.write('mytitle =' + mytitle + '\n')
         logf.write('MAXROW =' + str(IndexSheet[index,'MAXROW']) + '\n')
@@ -3583,7 +3584,7 @@ def update_master_from_google_sheets():
             row_dict = {}
             pprint.pprint(row[1],stream=logf)
             row_dict['SewadarNewID']=row[1]['GR ID']
-            row_dict['CANTEEN']=row[1]['Canteen-daily'].upper()
+            row_dict['CANTEEN']=row[1]['Canteen No'].upper()
             row_dict['DEV_DTY']=row[1]['New Jatha'].upper()
             row_dict['MOBILE']=row[1]['MOBILE']
             row_dict['AGE']=row[1]['AGE']
