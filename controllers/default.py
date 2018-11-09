@@ -64,7 +64,7 @@ def GRNOtoCARDNO(GRNO):
     return GRNO
 
 
-@auth.requires_login()
+#@auth.requires_login()
 def view_sewadar():
     import cgi
     import pandas as pd
@@ -84,7 +84,7 @@ def view_sewadar():
     LADIES_REQUIRED = 36
     SS_GENTS_REQUIRED = 30
     SS_LADIES_REQUIRED = 36
-    DATE_PRINT = datetime.datetime.strptime('2016-11-28', "%Y-%m-%d")
+    DATE_PRINT = datetime.datetime.strptime('2017-11-15', "%Y-%m-%d")
 
     LastUpdated = datetime.datetime(2000, 1, 1)
     datasource  = db(db.LocalVariables.id > 0).select()
